@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employee Clock In | About To Shine Cleaning</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+
+  <!-- IMPORTANT: ABSOLUTE PATH -->
+  <link rel="stylesheet" href="/About-To-Shine-Cleaning/assets/css/style.css">
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <img src="/About-To-Shine-Cleaning/assets/images/logo.png" alt="Logo">
+    </a>
+  </div>
+</header>
+
+<main class="page-container">
+
+  <h2>Employee Time Clock</h2>
+  <p id="employee-display"></p>
+
+  <!-- No pop-up alerts; we show status here -->
+  <div id="clock-status" role="status" aria-live="polite" style="margin:12px 0;"></div>
+
+  <label for="jobSelect">Current Cleaning</label>
+  <select id="jobSelect">
+    <option value="">-- Select Current Cleaning --</option>
+  </select>
+
+  <div class="clock-actions" style="margin-top:16px;">
+    <button id="btnClockIn" class="button" onclick="clockIn()">Clock In</button>
+    <button id="btnBreakStart" class="button" onclick="startBreak()">Start Break</button>
+    <button id="btnBreakEnd" class="button" onclick="endBreak()">End Break</button>
+    <button id="btnClockOut" class="button" onclick="clockOut()">Clock Out</button>
+  </div>
+
+  <!-- Notes (logged on clock-out) -->
+  <section style="margin-top:22px;">
+    <label for="jobNotes"><strong>Job Notes (optional)</strong></label>
+    <textarea id="jobNotes" rows="4" style="width:100%;max-width:860px;"></textarea>
+    <p style="margin-top:8px;font-size:0.95rem;opacity:0.8;">
+      Notes will be saved when you Clock Out.
+    </p>
+  </section>
+
+  <hr style="margin:40px 0;">
+
+  <section>
+    <h3>Management Contact</h3>
+    <div class="clock-actions">
+      <a href="tel:16108445928" class="button">Call Shannon</a>
+      <a href="tel:13477292829" class="button">Call Matt</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <p>© 2026 About To Shine Cleaning • Internal Use</p>
+  </div>
+</footer>
+
+<script src="/About-To-Shine-Cleaning/assets/js/clock.js" defer></script>
+
+
+</body>
+</html>
