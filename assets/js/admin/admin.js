@@ -1,86 +1,204 @@
-/* =========================================================
-   About To Shine — Admin Panel (NFC Protected)
-   File: /admin/admin.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ATS Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
 
-   Matches Apps Script router:
-   /exec?action=auth&t=TOKEN&d=DEVICEKEY&callback=cb
-   ========================================================= */
+  <style>
+    :root{
+      --purple:#5b2a86;
+      --blue:#2f7bdc;
+      --yellow:#FFD84D;
+      --ink:#111827;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --border:rgba(255,255,255,.18);
+    }
 
-(() => {
-  // ==============================
-  // CONFIG (YOUR DEPLOYMENT URL)
-  // ==============================
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbzjiBgtzj0MIXFonwdeXmVqbSw176C8KzAijd5XwlYHHWqrMztKhtLENC8Td5Yo9kU3/exec";
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      color:#fff;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      min-height:100vh;
+    }
 
-  // ==============================
-  // Storage keys
-  // ==============================
-  const TOKEN_KEY = "ATS_ADMIN_TOKEN";
-  const DEVICE_KEY = "ATS_DEVICE_KEY";
+    .topbar{
+      padding:18px 18px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
 
-  // ==============================
-  // Required DOM IDs on /admin/index.html
-  // ==============================
-  const elStatus = document.getElementById("status");
-  const elMsg = document.getElementById("message");
-  const elCards = document.getElementById("cards");
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
 
-  function setStatus(t) {
-    if (elStatus) elStatus.textContent = t || "";
-  }
-  function setMessage(t) {
-    if (elMsg) elMsg.textContent = t || "";
-  }
-  function escapeHtml(s) {
-    return String(s || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+    .sun{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      user-select:none;
+    }
 
-  // ==============================
-  // Get token from URL and hide it
-  // ==============================
+    .title{
+      font-weight:900;
+      font-size:18px;
+      line-height:1.1;
+    }
+
+    .sub{
+      font-size:12px;
+      color: rgba(255,255,255,.85);
+      margin-top:4px;
+    }
+
+    .accentline{
+      height:4px;
+      background: var(--yellow);
+      border-radius:999px;
+      margin:0 18px;
+    }
+
+    .wrap{
+      max-width:1050px;
+      margin:0 auto;
+      padding:18px;
+    }
+
+    .status{
+      margin:14px 0 18px;
+      padding:12px 14px;
+      border-radius:14px;
+      background: rgba(255,255,255,.10);
+      border:1px solid var(--border);
+      color:#fff;
+      font-size:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background: rgba(255,255,255,.10);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.20);
+    }
+
+    .card h3{
+      margin:0 0 6px;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .card p{
+      margin:0 0 12px;
+      color: rgba(255,255,255,.86);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .btn{
+      display:inline-block;
+      width:100%;
+      text-align:center;
+      padding:12px 12px;
+      border-radius:12px;
+      background: var(--yellow);
+      color: #111;
+      font-weight:900;
+      text-decoration:none;
+      border:0;
+      cursor:pointer;
+    }
+
+    .btn.secondary{
+      background: rgba(0,0,0,.20);
+      color:#fff;
+      border:1px solid var(--border);
+    }
+
+    .small{
+      font-size:12px;
+      color: rgba(255,255,255,.80);
+      margin-top:10px;
+      word-break:break-word;
+    }
+
+    .hidden{ display:none; }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="sun">☀︎</div>
+      <div>
+        <div class="title">About To Shine Cleaning</div>
+        <div class="sub">Admin Panel (NFC Protected)</div>
+      </div>
+    </div>
+    <div class="sub" id="who"></div>
+  </div>
+
+  <div class="accentline"></div>
+
+  <div class="wrap">
+    <div class="status" id="status">Loading secure access…</div>
+
+    <div class="grid hidden" id="cards">
+      <div class="card">
+        <h3>Employee Clock</h3>
+        <p>Open the employee clock page (existing system).</p>
+        <a class="btn" id="clockBtn" href="#" rel="noopener">Open Clock</a>
+        <div class="small">Clock page stays behind its own token rules.</div>
+      </div>
+
+      <div class="card">
+        <h3>Residential Estimator</h3>
+        <p>Walkthrough estimator (coming next).</p>
+        <button class="btn secondary" disabled>Coming Soon</button>
+        <div class="small">We’ll add this as /admin/estimator once admin is stable.</div>
+      </div>
+
+      <div class="card">
+        <h3>Admin Tools</h3>
+        <p>Payroll / reports / visitor tracking (later).</p>
+        <button class="btn secondary" disabled>Coming Soon</button>
+        <div class="small">This becomes your admin-only hub.</div>
+      </div>
+    </div>
+
+    <div class="small" id="debug"></div>
+  </div>
+
+<script>
+  // ✅ YOUR APPS SCRIPT WEB APP URL
+  const API_URL = "https://script.google.com/macros/s/AKfycbzjiBgtzj0MIXFonwdeXmVqbSw176C8KzAijd5XwlYHHWqrMztKhtLENC8Td5Yo9kU3/exec";
+
+  // ✅ token storage (so refresh works after we hide it)
+  const TOKEN_STORAGE = "ats_admin_token_v1";
+
+  // ✅ token from URL OR storage
   const url = new URL(window.location.href);
-  const tokenFromUrl = url.searchParams.get("t");
-
-  if (tokenFromUrl) {
-    sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
-
-    // remove token from address bar
-    url.searchParams.delete("t");
-    window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-  }
-
-  const token = sessionStorage.getItem(TOKEN_KEY);
-
-  if (!token) {
-    setStatus("Missing token");
-    setMessage("Unauthorized. Tap your NFC tag again.");
-    return;
-  }
-
-  // ==============================
-  // Device key (stable per device/browser)
-  // ==============================
-  function getOrCreateDeviceKey() {
-    let dk = localStorage.getItem(DEVICE_KEY);
-    if (dk) return dk;
-
-    // Create a random stable key (no permissions needed)
-    dk = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem(DEVICE_KEY, dk);
-    return dk;
-  }
-
-  const deviceKey = getOrCreateDeviceKey();
-
-  // ==============================
-  // JSONP helper (avoids CORS issues on iPhone)
-  // ==============================
-  function jsonp(baseUrl, paramsObj, timeoutMs = 12000) {
-    return new Promise((resolve, reject) => {
-      const cbName = "__ats_cb_
+  const tokenFromUrl = url.searchParams.get("t") || "";
+  if (tokenFromUrl) sessionStorage.setItem(TOK
