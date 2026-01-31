@@ -1,204 +1,138 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>ATS Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex,nofollow,noarchive" />
+(() => {
+  // ==========================
+  // CONFIG
+  // ==========================
+  const API_URL = "https://script.google.com/macros/s/AKfycbx2779-67TSLsEumWgpCxwHYczip1oTL8Q-Vwmct287iW9IX6HNRT-minhYOUwd6jMR/exec"; // must end in /exec
 
-  <style>
-    :root{
-      --purple:#5b2a86;
-      --blue:#2f7bdc;
-      --yellow:#FFD84D;
-      --ink:#111827;
-      --muted:#6b7280;
-      --card:#ffffff;
-      --border:rgba(255,255,255,.18);
-    }
+  // ==========================
+  // DOM
+  // ==========================
+  const statusEl = document.getElementById("status");
+  const whoEl = document.getElementById("who");
+  const cardsEl = document.getElementById("cards");
+  const debugEl = document.getElementById("debug");
+  const clockBtn = document.getElementById("clockBtn");
 
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      color:#fff;
-      background: linear-gradient(135deg, var(--purple), var(--blue));
-      min-height:100vh;
-    }
+  function setStatus(msg){ statusEl.textContent = String(msg || ""); }
+  function setDebug(msg){ debugEl.textContent = String(msg || ""); }
 
-    .topbar{
-      padding:18px 18px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
+  // NEVER allow “blank page”
+  window.onerror = function(message, source, lineno, colno, error){
+    setStatus("JS Error:\n" + message);
+    setDebug("Source: " + source + " @ " + lineno + ":" + colno);
+    return true;
+  };
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .sun{
-      width:44px;
-      height:44px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.12);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      user-select:none;
-    }
-
-    .title{
-      font-weight:900;
-      font-size:18px;
-      line-height:1.1;
-    }
-
-    .sub{
-      font-size:12px;
-      color: rgba(255,255,255,.85);
-      margin-top:4px;
-    }
-
-    .accentline{
-      height:4px;
-      background: var(--yellow);
-      border-radius:999px;
-      margin:0 18px;
-    }
-
-    .wrap{
-      max-width:1050px;
-      margin:0 auto;
-      padding:18px;
-    }
-
-    .status{
-      margin:14px 0 18px;
-      padding:12px 14px;
-      border-radius:14px;
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:14px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-    }
-    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
-
-    .card{
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px rgba(0,0,0,.20);
-    }
-
-    .card h3{
-      margin:0 0 6px;
-      font-size:16px;
-      font-weight:900;
-    }
-
-    .card p{
-      margin:0 0 12px;
-      color: rgba(255,255,255,.86);
-      font-size:13px;
-      line-height:1.5;
-    }
-
-    .btn{
-      display:inline-block;
-      width:100%;
-      text-align:center;
-      padding:12px 12px;
-      border-radius:12px;
-      background: var(--yellow);
-      color: #111;
-      font-weight:900;
-      text-decoration:none;
-      border:0;
-      cursor:pointer;
-    }
-
-    .btn.secondary{
-      background: rgba(0,0,0,.20);
-      color:#fff;
-      border:1px solid var(--border);
-    }
-
-    .small{
-      font-size:12px;
-      color: rgba(255,255,255,.80);
-      margin-top:10px;
-      word-break:break-word;
-    }
-
-    .hidden{ display:none; }
-  </style>
-</head>
-
-<body>
-  <div class="topbar">
-    <div class="brand">
-      <div class="sun">☀︎</div>
-      <div>
-        <div class="title">About To Shine Cleaning</div>
-        <div class="sub">Admin Panel (NFC Protected)</div>
-      </div>
-    </div>
-    <div class="sub" id="who"></div>
-  </div>
-
-  <div class="accentline"></div>
-
-  <div class="wrap">
-    <div class="status" id="status">Loading secure access…</div>
-
-    <div class="grid hidden" id="cards">
-      <div class="card">
-        <h3>Employee Clock</h3>
-        <p>Open the employee clock page (existing system).</p>
-        <a class="btn" id="clockBtn" href="#" rel="noopener">Open Clock</a>
-        <div class="small">Clock page stays behind its own token rules.</div>
-      </div>
-
-      <div class="card">
-        <h3>Residential Estimator</h3>
-        <p>Walkthrough estimator (coming next).</p>
-        <button class="btn secondary" disabled>Coming Soon</button>
-        <div class="small">We’ll add this as /admin/estimator once admin is stable.</div>
-      </div>
-
-      <div class="card">
-        <h3>Admin Tools</h3>
-        <p>Payroll / reports / visitor tracking (later).</p>
-        <button class="btn secondary" disabled>Coming Soon</button>
-        <div class="small">This becomes your admin-only hub.</div>
-      </div>
-    </div>
-
-    <div class="small" id="debug"></div>
-  </div>
-
-<script>
-  // ✅ YOUR APPS SCRIPT WEB APP URL
-  const API_URL = "https://script.google.com/macros/s/AKfycbzjiBgtzj0MIXFonwdeXmVqbSw176C8KzAijd5XwlYHHWqrMztKhtLENC8Td5Yo9kU3/exec";
-
-  // ✅ token storage (so refresh works after we hide it)
-  const TOKEN_STORAGE = "ats_admin_token_v1";
-
-  // ✅ token from URL OR storage
+  // ==========================
+  // TOKEN + DEVICE KEY
+  // ==========================
   const url = new URL(window.location.href);
-  const tokenFromUrl = url.searchParams.get("t") || "";
-  if (tokenFromUrl) sessionStorage.setItem(TOK
+  const token = url.searchParams.get("t") || "";
+
+  const DEVICE_KEY_STORAGE = "ats_device_key_v1";
+  function getDeviceKey(){
+    let key = localStorage.getItem(DEVICE_KEY_STORAGE);
+    if (!key) {
+      key = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem(DEVICE_KEY_STORAGE, key);
+    }
+    return key;
+  }
+
+  function removeTokenFromUrl(){
+    try{
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete("t");
+      window.history.replaceState({}, "", clean.pathname + (clean.search ? clean.search : ""));
+    } catch(e) {}
+  }
+
+  // ==========================
+  // JSONP
+  // ==========================
+  function jsonp(u){
+    return new Promise((resolve, reject) => {
+      const cb = "cb_" + Math.random().toString(36).slice(2);
+      const script = document.createElement("script");
+      const sep = u.includes("?") ? "&" : "?";
+      script.src = u + sep + "callback=" + cb;
+
+      window[cb] = (data) => {
+        try { resolve(data); }
+        finally {
+          delete window[cb];
+          script.remove();
+        }
+      };
+
+      script.onerror = () => {
+        delete window[cb];
+        script.remove();
+        reject(new Error("JSONP failed to load: " + script.src));
+      };
+
+      document.body.appendChild(script);
+    });
+  }
+
+  // ==========================
+  // BOOT
+  // ==========================
+  async function boot(){
+    // Basic “is page even running?” proof
+    setStatus("Admin panel loaded.\nChecking NFC token…");
+    setDebug("Location: " + window.location.pathname);
+
+    if (!token) {
+      setStatus("Denied: missing token.\nUse the NFC link that includes ?t=YOURTOKEN");
+      setDebug("Tip: Your NFC tag should point to /admin/?t=...");
+      return;
+    }
+
+    // Quick ping first (helps diagnose wrong URL instantly)
+    try{
+      const ping = await jsonp(API_URL + "?action=ping");
+      if (!ping || !ping.ok) throw new Error("Ping failed");
+    } catch(err){
+      setStatus("Error: API not reachable.\n(Your API_URL is wrong OR deployment access isn't 'Anyone')");
+      setDebug(String(err && err.message ? err.message : err));
+      return;
+    }
+
+    const deviceKey = getDeviceKey();
+
+    try{
+      setStatus("API reachable ✅\nAuthenticating…");
+
+      const authUrl =
+        API_URL +
+        "?action=auth" +
+        "&t=" + encodeURIComponent(token) +
+        "&d=" + encodeURIComponent(deviceKey);
+
+      const res = await jsonp(authUrl);
+
+      if (!res || !res.ok) {
+        setStatus("Denied: " + (res && res.error ? res.error : "unauthorized"));
+        setDebug(res ? JSON.stringify(res) : "No response object");
+        return;
+      }
+
+      whoEl.textContent = res.employeeId + " • " + res.employeeName;
+      setStatus("Access granted ✅");
+      cardsEl.classList.remove("hidden");
+
+      // Clock link
+      clockBtn.href = "/clock.html?emp=" + encodeURIComponent(res.employeeId);
+
+      // Remove token after auth
+      removeTokenFromUrl();
+      setDebug("Device binding active.");
+    } catch(err){
+      setStatus("Error during auth.");
+      setDebug(String(err && err.message ? err.message : err));
+    }
+  }
+
+  boot();
+})();
