@@ -10,8 +10,6 @@
       --purple:#5b2a86;
       --blue:#2f7bdc;
       --yellow:#FFD84D;
-      --ink:#111827;
-      --muted:#6b7280;
       --border:rgba(255,255,255,.18);
     }
     *{box-sizing:border-box}
@@ -22,63 +20,39 @@
       background: linear-gradient(135deg, var(--purple), var(--blue));
       min-height:100vh;
     }
-    .topbar{
-      padding:18px 18px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
+    .topbar{padding:18px 18px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .brand{display:flex;align-items:center;gap:12px;}
     .sun{
-      width:44px;
-      height:44px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.12);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      user-select:none;
+      width:44px;height:44px;border-radius:14px;border:1px solid var(--border);
+      background: rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;
+      font-size:22px;user-select:none;
     }
     .title{font-weight:900;font-size:18px;line-height:1.1}
     .sub{font-size:12px;color:rgba(255,255,255,.85);margin-top:4px}
     .accentline{height:4px;background:var(--yellow);border-radius:999px;margin:0 18px}
     .wrap{max-width:1050px;margin:0 auto;padding:18px}
     .status{
-      margin:14px 0 18px;
-      padding:12px 14px;
-      border-radius:14px;
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:14px;
+      margin:14px 0 18px;padding:12px 14px;border-radius:14px;
+      background: rgba(255,255,255,.10);border:1px solid var(--border);color:#fff;font-size:14px;
     }
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
     .card{
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.10);border:1px solid var(--border);
+      border-radius:18px;padding:16px;backdrop-filter: blur(10px);
       box-shadow: 0 10px 28px rgba(0,0,0,.20);
     }
     .card h3{margin:0 0 6px;font-size:16px;font-weight:900}
     .card p{margin:0 0 12px;color:rgba(255,255,255,.86);font-size:13px;line-height:1.5}
     .btn{
-      display:inline-block;width:100%;text-align:center;
-      padding:12px 12px;border-radius:12px;
-      background: var(--yellow);color:#111;
-      font-weight:900;text-decoration:none;border:0;cursor:pointer;
+      display:inline-block;width:100%;text-align:center;padding:12px 12px;border-radius:12px;
+      background: var(--yellow);color:#111;font-weight:900;text-decoration:none;border:0;cursor:pointer;
     }
     .btn.secondary{background: rgba(0,0,0,.20);color:#fff;border:1px solid var(--border)}
-    .small{font-size:12px;color:rgba(255,255,255,.80);margin-top:10px;word-break:break-word}
+    .small{
+      font-size:12px;color:rgba(255,255,255,.85);margin-top:10px;
+      word-break:break-word;white-space:pre-wrap;
+    }
     .hidden{display:none}
   </style>
 </head>
@@ -173,7 +147,7 @@
       script.onerror = () => {
         delete window[cb];
         script.remove();
-        reject(new Error("JSONP failed to load"));
+        reject(new Error("JSONP failed to load: " + script.src));
       };
 
       document.body.appendChild(script);
@@ -181,22 +155,29 @@
   }
 
   async function boot(){
-    // Quick API reachability proof:
+    // always show what URL we are on
+    debugEl.textContent =
+      "Page: " + window.location.href + "\\n" +
+      "API_URL: " + API_URL + "\\n";
+
+    // Ping first to prove API is reachable
     try {
-      await jsonp(API_URL + "?action=ping");
+      const ping = await jsonp(API_URL + "?action=ping");
+      debugEl.textContent += "Ping: " + JSON.stringify(ping) + "\\n";
     } catch (e) {
-      setStatus("Error: Could not reach secure API. Check API_URL + deployment.");
-      debugEl.textContent = "Ping failed. " + (e && e.message ? e.message : e);
+      setStatus("Error: Could not reach secure API.");
+      debugEl.textContent += "Ping failed: " + (e && e.message ? e.message : e);
       return;
     }
 
     if (!token) {
       setStatus("Denied: missing token. Use NFC link that includes ?t=YOURTOKEN");
-      debugEl.textContent = "Tip: your NFC URL should look like /admin/?t=ats_e01_...";
+      debugEl.textContent += "Missing ?t=... in the URL.\\n";
       return;
     }
 
     const deviceKey = getDeviceKey();
+    debugEl.textContent += "DeviceKey: " + deviceKey + "\\n";
 
     try {
       setStatus("Checking access…");
@@ -207,11 +188,13 @@
         "&t=" + encodeURIComponent(token) +
         "&d=" + encodeURIComponent(deviceKey);
 
+      debugEl.textContent += "Auth URL: " + authUrl + "\\n";
+
       const res = await jsonp(authUrl);
+      debugEl.textContent += "Auth Response: " + JSON.stringify(res) + "\\n";
 
       if (!res || !res.ok) {
         setStatus("Denied: " + (res && res.error ? res.error : "unauthorized"));
-        debugEl.textContent = JSON.stringify(res || {}, null, 2);
         return;
       }
 
@@ -219,14 +202,14 @@
       setStatus("Access granted ✅");
       cardsEl.classList.remove("hidden");
 
-      // Change this later to your admin-safe clock route if needed
+      // open clock for this employee
       clockBtn.href = "/clock.html?emp=" + encodeURIComponent(res.employeeId);
 
       removeTokenFromUrl();
-      debugEl.textContent = "Device binding active. If you switch phones, it will deny until re-approved.";
+      debugEl.textContent += "Token removed from address bar.\\n";
     } catch (err) {
       setStatus("Error: Auth request failed.");
-      debugEl.textContent = String(err && err.message ? err.message : err);
+      debugEl.textContent += "Auth failed: " + (err && err.message ? err.message : err);
     }
   }
 
