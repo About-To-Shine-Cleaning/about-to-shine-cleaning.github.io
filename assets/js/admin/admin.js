@@ -2,36 +2,36 @@
    About To Shine — Admin Panel (NFC Protected)
    File: /admin/admin.js
 
-   - Reads token from URL (?t=...)
-   - Stores in sessionStorage
-   - Removes token from address bar (history.replaceState)
-   - Auth checks via JSONP against Apps Script Web App
+   Matches Apps Script router:
+   /exec?action=auth&t=TOKEN&d=DEVICEKEY&callback=cb
    ========================================================= */
 
 (() => {
   // ==============================
-  // CONFIG
+  // CONFIG (YOUR DEPLOYMENT URL)
   // ==============================
   const API_URL =
     "https://script.google.com/macros/s/AKfycbzjiBgtzj0MIXFonwdeXmVqbSw176C8KzAijd5XwlYHHWqrMztKhtLENC8Td5Yo9kU3/exec";
 
-  // Where to store the token after NFC tap
+  // ==============================
+  // Storage keys
+  // ==============================
   const TOKEN_KEY = "ATS_ADMIN_TOKEN";
+  const DEVICE_KEY = "ATS_DEVICE_KEY";
 
   // ==============================
-  // DOM helpers (expects these IDs)
+  // Required DOM IDs on /admin/index.html
   // ==============================
   const elStatus = document.getElementById("status");
   const elMsg = document.getElementById("message");
   const elCards = document.getElementById("cards");
 
-  function setStatus(text) {
-    if (elStatus) elStatus.textContent = text;
+  function setStatus(t) {
+    if (elStatus) elStatus.textContent = t || "";
   }
-  function setMessage(text) {
-    if (elMsg) elMsg.textContent = text || "";
+  function setMessage(t) {
+    if (elMsg) elMsg.textContent = t || "";
   }
-
   function escapeHtml(s) {
     return String(s || "")
       .replaceAll("&", "&amp;")
@@ -42,17 +42,16 @@
   }
 
   // ==============================
-  // Token logic
+  // Get token from URL and hide it
   // ==============================
   const url = new URL(window.location.href);
   const tokenFromUrl = url.searchParams.get("t");
 
-  // If token is in URL, store it and remove it from address bar
   if (tokenFromUrl) {
     sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
 
+    // remove token from address bar
     url.searchParams.delete("t");
-    // Remove token from the visible URL
     window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
   }
 
@@ -60,12 +59,28 @@
 
   if (!token) {
     setStatus("Missing token");
-    setMessage("Unauthorized. Please tap your NFC tag again.");
+    setMessage("Unauthorized. Tap your NFC tag again.");
     return;
   }
 
   // ==============================
-  // JSONP helper (avoids CORS issues on iPhone/Safari)
+  // Device key (stable per device/browser)
   // ==============================
-  function jsonp(url, timeoutMs = 10000) {
-    return new Promise((resolve, rej
+  function getOrCreateDeviceKey() {
+    let dk = localStorage.getItem(DEVICE_KEY);
+    if (dk) return dk;
+
+    // Create a random stable key (no permissions needed)
+    dk = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(DEVICE_KEY, dk);
+    return dk;
+  }
+
+  const deviceKey = getOrCreateDeviceKey();
+
+  // ==============================
+  // JSONP helper (avoids CORS issues on iPhone)
+  // ==============================
+  function jsonp(baseUrl, paramsObj, timeoutMs = 12000) {
+    return new Promise((resolve, reject) => {
+      const cbName = "__ats_cb_
