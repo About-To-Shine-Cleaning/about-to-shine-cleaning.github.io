@@ -2,7 +2,7 @@
   // ==========================
   // CONFIG
   // ==========================
-  const API_URL = "https://script.google.com/macros/s/AKfycbx2779-67TSLsEumWgpCxwHYczip1oTL8Q-Vwmct287iW9IX6HNRT-minhYOUwd6jMR/exec"; // must end in /exec
+  const API_URL = "https://script.google.com/macros/s/AKfycbyYBG5s4khMRNDsNiHi-v_dieGqpsYxDHCVB1TC-DLq9uqfigu5OVVXb0NQOBp4qDOX/exec"; // must end in /exec
 
   // ==========================
   // DOM
