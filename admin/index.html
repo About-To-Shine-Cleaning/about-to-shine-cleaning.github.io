@@ -5,153 +5,57 @@
   <title>ATS Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
-
   <style>
     :root{
       --purple:#5b2a86;
       --blue:#2f7bdc;
       --yellow:#FFD84D;
-      --ink:#111827;
-      --muted:#6b7280;
-      --card:#ffffff;
       --border:rgba(255,255,255,.18);
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: Arial, sans-serif;
+      font-family:Arial, sans-serif;
       color:#fff;
-      background: linear-gradient(135deg, var(--purple), var(--blue));
+      background:linear-gradient(135deg,var(--purple),var(--blue));
       min-height:100vh;
     }
-
-    .topbar{
-      padding:18px 18px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
+    .topbar{padding:18px 18px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
     .sun{
-      width:44px;
-      height:44px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.12);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      user-select:none;
+      width:44px;height:44px;border-radius:14px;border:1px solid var(--border);
+      background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;
+      font-size:22px;user-select:none
     }
-
-    .title{
-      font-weight:900;
-      font-size:18px;
-      line-height:1.1;
-    }
-
-    .sub{
-      font-size:12px;
-      color: rgba(255,255,255,.85);
-      margin-top:4px;
-    }
-
-    .accentline{
-      height:4px;
-      background: var(--yellow);
-      border-radius:999px;
-      margin:0 18px;
-    }
-
-    .wrap{
-      max-width:1050px;
-      margin:0 auto;
-      padding:18px;
-    }
-
+    .title{font-weight:900;font-size:18px;line-height:1.1}
+    .sub{font-size:12px;color:rgba(255,255,255,.85);margin-top:4px}
+    .accentline{height:4px;background:var(--yellow);border-radius:999px;margin:0 18px}
+    .wrap{max-width:1050px;margin:0 auto;padding:18px}
     .status{
-      margin:14px 0 18px;
-      padding:12px 14px;
-      border-radius:14px;
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:14px;
+      margin:14px 0 18px;padding:12px 14px;border-radius:14px;
+      background:rgba(255,255,255,.10);border:1px solid var(--border);
+      color:#fff;font-size:14px;white-space:pre-wrap
     }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-    }
-    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
-
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
     .card{
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px rgba(0,0,0,.20);
+      background:rgba(255,255,255,.10);border:1px solid var(--border);border-radius:18px;
+      padding:16px;backdrop-filter:blur(10px);box-shadow:0 10px 28px rgba(0,0,0,.20)
     }
-
-    .card h3{
-      margin:0 0 6px;
-      font-size:16px;
-      font-weight:900;
-    }
-
-    .card p{
-      margin:0 0 12px;
-      color: rgba(255,255,255,.86);
-      font-size:13px;
-      line-height:1.5;
-    }
-
+    .card h3{margin:0 0 6px;font-size:16px;font-weight:900}
+    .card p{margin:0 0 12px;color:rgba(255,255,255,.86);font-size:13px;line-height:1.5}
     .btn{
-      display:inline-block;
-      width:100%;
-      text-align:center;
-      padding:12px 12px;
-      border-radius:12px;
-      background: var(--yellow);
-      color: #111;
-      font-weight:900;
-      text-decoration:none;
-      border:0;
-      cursor:pointer;
+      display:inline-block;width:100%;text-align:center;padding:12px;border-radius:12px;
+      background:var(--yellow);color:#111;font-weight:900;text-decoration:none;border:0;cursor:pointer
     }
-
-    .btn.secondary{
-      background: rgba(0,0,0,.20);
-      color:#fff;
-      border:1px solid var(--border);
-    }
-
-    .small{
-      font-size:12px;
-      color: rgba(255,255,255,.80);
-      margin-top:10px;
-      word-break:break-word;
-    }
-
-    .hidden{ display:none; }
+    .btn.secondary{background:rgba(0,0,0,.20);color:#fff;border:1px solid var(--border)}
+    .small{font-size:12px;color:rgba(255,255,255,.80);margin-top:10px;word-break:break-word}
+    .hidden{display:none}
   </style>
 </head>
-
 <body>
   <div class="topbar">
     <div class="brand">
-      <!-- Replace this emoji later with your sun outline PNG if you want -->
       <div class="sun">☀︎</div>
       <div>
         <div class="title">About To Shine Cleaning</div>
@@ -164,137 +68,35 @@
   <div class="accentline"></div>
 
   <div class="wrap">
-    <div class="status" id="status">Loading secure access…</div>
+    <div class="status" id="status">Loading…</div>
 
     <div class="grid hidden" id="cards">
       <div class="card">
         <h3>Employee Clock</h3>
-        <p>Open the employee clock page (existing system).</p>
+        <p>Open the clock page.</p>
         <a class="btn" id="clockBtn" href="#" rel="noopener">Open Clock</a>
-        <div class="small">Clock page stays behind its own token rules.</div>
+        <div class="small">Clock page has its own access rules.</div>
       </div>
 
       <div class="card">
         <h3>Residential Estimator</h3>
-        <p>Walkthrough estimator (coming next).</p>
+        <p>Walkthrough estimator.</p>
         <button class="btn secondary" disabled>Coming Soon</button>
-        <div class="small">We’ll add this as /admin/estimator once admin is stable.</div>
+        <div class="small">We’ll add /admin/estimator next.</div>
       </div>
 
       <div class="card">
         <h3>Admin Tools</h3>
-        <p>Payroll / reports / visitor tracking (later).</p>
+        <p>Payroll / reports / visitor tracking.</p>
         <button class="btn secondary" disabled>Coming Soon</button>
-        <div class="small">This becomes your admin-only hub.</div>
+        <div class="small">Admin-only hub.</div>
       </div>
     </div>
 
     <div class="small" id="debug"></div>
   </div>
 
-<script>
-  // ✅ PUT YOUR APPS SCRIPT WEB APP URL HERE
-  const API_URL = "https://script.google.com/macros/s/AKfycbzPTx39sUZlaMPEdLpY7nNriv3XdM9ckgls2PNn0rSFm7tgrCgqVNjDmhmEbYGDTcBY/exec";
-  // Example: https://script.google.com/macros/s/AKfy.../exec
-
-  // ✅ token from URL
-  const url = new URL(window.location.href);
-  const token = url.searchParams.get("t") || "";
-
-  // ✅ device key stored on phone (simple device binding)
-  const DEVICE_KEY_STORAGE = "ats_device_key_v1";
-  function getDeviceKey(){
-    let key = localStorage.getItem(DEVICE_KEY_STORAGE);
-    if (!key) {
-      key = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-      localStorage.setItem(DEVICE_KEY_STORAGE, key);
-    }
-    return key;
-  }
-
-  // ✅ remove token from address bar after load
-  function removeTokenFromUrl(){
-    url.searchParams.delete("t");
-    window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
-  }
-
-  const statusEl = document.getElementById("status");
-  const whoEl = document.getElementById("who");
-  const cardsEl = document.getElementById("cards");
-  const debugEl = document.getElementById("debug");
-  const clockBtn = document.getElementById("clockBtn");
-
-  function setStatus(msg){
-    statusEl.textContent = msg;
-  }
-
-  // JSONP helper (bypasses CORS + works on iPhone)
-  function jsonp(url){
-    return new Promise((resolve, reject) => {
-      const cb = "cb_" + Math.random().toString(36).slice(2);
-      window[cb] = (data) => {
-        try { resolve(data); } finally {
-          delete window[cb];
-          script.remove();
-        }
-      };
-      const script = document.createElement("script");
-      script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
-      script.onerror = () => {
-        delete window[cb];
-        script.remove();
-        reject(new Error("JSONP failed to load"));
-      };
-      document.body.appendChild(script);
-    });
-  }
-
-  async function boot(){
-    if (!token) {
-      setStatus("Denied: missing token. Use NFC link that includes ?t=YOURTOKEN");
-      return;
-    }
-
-    const deviceKey = getDeviceKey();
-
-    try {
-      setStatus("Checking access…");
-
-      // Call: /exec?action=auth&t=...&d=...
-      const authUrl =
-        API_URL +
-        "?action=auth" +
-        "&t=" + encodeURIComponent(token) +
-        "&d=" + encodeURIComponent(deviceKey);
-
-      const res = await jsonp(authUrl);
-
-      if (!res || !res.ok) {
-        setStatus("Denied: " + (res && res.error ? res.error : "unauthorized"));
-        debugEl.textContent = "";
-        return;
-      }
-
-      // ✅ authorized
-      whoEl.textContent = res.employeeId + " • " + res.employeeName;
-      setStatus("Access granted ✅");
-      cardsEl.classList.remove("hidden");
-
-      // Example: you can point this to your real clock link
-      // If you want it to open the CLOCK page with the same emp:
-      clockBtn.href = "/clock.html?emp=" + encodeURIComponent(res.employeeId);
-
-      // ✅ remove token from URL now that we’re authenticated
-      removeTokenFromUrl();
-
-      debugEl.textContent = "Device binding active.";
-    } catch (err) {
-      setStatus("Error: Could not reach secure API. Check API_URL + deployment.");
-      debugEl.textContent = String(err && err.message ? err.message : err);
-    }
-  }
-
-  boot();
-</script>
+  <!-- IMPORTANT: absolute path so it never 404s from /admin/ -->
+  <script src="/admin/admin.js?v=1"></script>
 </body>
 </html>
