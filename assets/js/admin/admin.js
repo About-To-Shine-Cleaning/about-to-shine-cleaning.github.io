@@ -1,65 +1,71 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzjiBgtzj0MIXFonwdeXmVqbSw176C8KzAijd5XwlYHHWqrMztKhtLENC8Td5Yo9kU3/exec";
+/* =========================================================
+   About To Shine — Admin Panel (NFC Protected)
+   File: /admin/admin.js
 
-const statusEl = document.getElementById("status");
-const panelEl = document.getElementById("panel");
-const whoEl = document.getElementById("who");
+   - Reads token from URL (?t=...)
+   - Stores in sessionStorage
+   - Removes token from address bar (history.replaceState)
+   - Auth checks via JSONP against Apps Script Web App
+   ========================================================= */
 
-function getParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
+(() => {
+  // ==============================
+  // CONFIG
+  // ==============================
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbzjiBgtzj0MIXFonwdeXmVqbSw176C8KzAijd5XwlYHHWqrMztKhtLENC8Td5Yo9kU3/exec";
 
-function getOrCreateDeviceKey() {
-  const keyName = "ats_devicekey";
-  let k = localStorage.getItem(keyName);
-  if (!k) {
-    k = "dev_" + crypto.getRandomValues(new Uint32Array(4)).join("-");
-    localStorage.setItem(keyName, k);
+  // Where to store the token after NFC tap
+  const TOKEN_KEY = "ATS_ADMIN_TOKEN";
+
+  // ==============================
+  // DOM helpers (expects these IDs)
+  // ==============================
+  const elStatus = document.getElementById("status");
+  const elMsg = document.getElementById("message");
+  const elCards = document.getElementById("cards");
+
+  function setStatus(text) {
+    if (elStatus) elStatus.textContent = text;
   }
-  return k;
-}
+  function setMessage(text) {
+    if (elMsg) elMsg.textContent = text || "";
+  }
 
-// Remove token from address bar after load (token still works, just not visible)
-function stripTokenFromUrl() {
+  function escapeHtml(s) {
+    return String(s || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // ==============================
+  // Token logic
+  // ==============================
   const url = new URL(window.location.href);
-  url.searchParams.delete("t");
-  history.replaceState({}, "", url.toString());
-}
+  const tokenFromUrl = url.searchParams.get("t");
 
-window.onAdminAuth = function (res) {
-  if (!res || !res.ok) {
-    const why = res?.reason || "unauthorized";
-    statusEl.textContent = `Access denied (${why}).`;
-    panelEl.style.display = "none";
+  // If token is in URL, store it and remove it from address bar
+  if (tokenFromUrl) {
+    sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
+
+    url.searchParams.delete("t");
+    // Remove token from the visible URL
+    window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+  }
+
+  const token = sessionStorage.getItem(TOKEN_KEY);
+
+  if (!token) {
+    setStatus("Missing token");
+    setMessage("Unauthorized. Please tap your NFC tag again.");
     return;
   }
 
-  // Role gate (only admin can see admin panel)
-  if ((res.role || "").toLowerCase() !== "admin") {
-    statusEl.textContent = "Access denied (not admin).";
-    panelEl.style.display = "none";
-    return;
-  }
-
-  statusEl.textContent = "Access granted ✅";
-  whoEl.textContent = `Signed in: ${res.employeeid} (${res.status})`;
-  panelEl.style.display = "block";
-
-  stripTokenFromUrl();
-};
-
-(function boot() {
-  const t = (getParam("t") || "").trim();
-  if (!t) {
-    statusEl.textContent = "Missing token.";
-    return;
-  }
-
-  const deviceKey = getOrCreateDeviceKey();
-
-  // JSONP call (bypasses CORS)
-  const s = document.createElement("script");
-  s.src = `${GAS_URL}?action=auth&t=${encodeURIComponent(t)}&device=${encodeURIComponent(deviceKey)}&callback=onAdminAuth`;
-  s.async = true;
-  s.onerror = () => statusEl.textContent = "Auth failed (script load error).";
-  document.body.appendChild(s);
-})();
+  // ==============================
+  // JSONP helper (avoids CORS issues on iPhone/Safari)
+  // ==============================
+  function jsonp(url, timeoutMs = 10000) {
+    return new Promise((resolve, rej
