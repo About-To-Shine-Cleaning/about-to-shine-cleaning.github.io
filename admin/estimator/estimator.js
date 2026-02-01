@@ -8,7 +8,7 @@
 
 (() => {
   // ✅ SAME EXEC as admin panel
-  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec
 
   // ✅ v1.5 access
   const AUTH_STORAGE = "ats_admin_auth_v1"; // sessionStorage
