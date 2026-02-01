@@ -1,23 +1,20 @@
 /* =========================================================
-   ATS Admin Panel (NFC Protected) — v1.5
+   ATS Admin Panel (NFC Protected) — v1.5 (LOCKED)
    - JSONP ping/auth to Apps Script (iPhone-safe)
    - Device binding via localStorage device key
    - Removes token from URL after successful auth
-   - Shows Estimator card only for allowed admins
+   - Shows Estimator card only for E01 + E04
 ========================================================= */
 
 (() => {
-  // ✅ YOUR CURRENT APPS SCRIPT EXEC (admin auth + estimator api)
-  const API_URL = "AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp";
+  // ✅ SINGLE SOURCE OF TRUTH (same exec your estimator uses)
+  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
-  // ✅ Who can see the Estimator card (you said: E01 + E04 for now)
   const ESTIMATOR_ALLOWED = ["E01", "E04"];
 
-  // Storage keys
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
   const AUTH_STORAGE = "ats_admin_auth_v1"; // sessionStorage
 
-  // Elements
   const statusEl = document.getElementById("status");
   const whoEl = document.getElementById("who");
   const cardsEl = document.getElementById("cards");
@@ -46,7 +43,6 @@
     }catch(e){}
   }
 
-  // JSONP helper
   function jsonp(url){
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Math.random().toString(36).slice(2);
@@ -84,25 +80,22 @@
     );
   }
 
+  function saveSessionAuth(obj){
+    try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(obj)); } catch(e){}
+  }
+
   function showCards(employeeId, employeeName){
     if (whoEl) whoEl.textContent = `${employeeId} • ${employeeName}`;
 
-    // Clock link (your existing clock page)
     if (clockBtn) clockBtn.href = `/clock.html?emp=${encodeURIComponent(employeeId)}`;
 
-    // Estimator card: show only allowed
     if (estimatorCard) {
       if (ESTIMATOR_ALLOWED.includes(employeeId)) estimatorCard.classList.remove("hidden");
       else estimatorCard.classList.add("hidden");
     }
-
     if (estimatorBtn) estimatorBtn.href = "/admin/estimator/";
 
     if (cardsEl) cardsEl.classList.remove("hidden");
-  }
-
-  function saveSessionAuth(obj){
-    try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(obj)); } catch(e){}
   }
 
   async function boot(){
@@ -121,7 +114,7 @@
       return;
     }
 
-    try {
+    try{
       setStatus("Checking secure API (ping)…");
       const p = await ping();
       if (!p || !p.ok) throw new Error("Ping did not return ok");
@@ -148,7 +141,7 @@
       setStatus("Access granted ✅");
       removeTokenFromUrl();
       setDebug("Device binding active. Token removed from address bar.");
-    } catch (err) {
+    } catch(err){
       setStatus(
         "Error: Could not reach secure API.\n\n" +
         `Page: ${window.location.href}\n` +
