@@ -43,8 +43,11 @@
     .box.on{background:var(--yellow)}
     .task .name{font-weight:700; font-size:13px}
     .task .meta{font-size:12px; color:var(--muted); margin-top:2px}
-    .sticky{position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border);
-      padding:12px; display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap}
+
+    .sticky{
+      position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border);
+      padding:12px; display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap
+    }
     button{border:0; border-radius:10px; padding:10px 12px; font-weight:900; cursor:pointer}
     .save{background:var(--purple); color:#fff}
     .ghost{background:#fff; border:1px solid var(--border)}
@@ -62,8 +65,17 @@
     }
     .emailRow input{width:auto}
     a.back{color:#fff; text-decoration:none; font-weight:900;}
+
+    /* error banner */
+    .errorBanner{
+      white-space:pre-wrap;
+      color:#b91c1c;
+      background:#fff;
+      border:1px solid #fecaca;
+    }
   </style>
 </head>
+
 <body>
   <div class="letterhead">
     <div class="row">
@@ -80,11 +92,103 @@
   </div>
 
   <div class="wrap" id="app">
-    <div class="card" id="authGate">
+    <!-- (Optional) keep for later. It won't break anything. -->
+    <div class="card" id="authGate" style="display:none;">
       Checking admin access…
+    </div>
+
+    <!-- Error output from estimator.js -->
+    <div class="card errorBanner" id="taskError" style="display:none;"></div>
+
+    <!-- Client info -->
+    <div class="card">
+      <div class="grid">
+        <div><label>Client Name</label><input id="clientName" placeholder="Last, First (recommended)"/></div>
+        <div><label>Phone</label><input id="clientPhone" placeholder="(555) 555-5555"/></div>
+        <div><label>Address</label><input id="clientAddress" placeholder="Street, City, State"/></div>
+        <div><label>Email</label><input id="clientEmail" placeholder="name@email.com"/></div>
+
+        <div>
+          <label>Preferred Day</label>
+          <select id="prefDay">
+            <option value="">Select</option>
+            <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+            <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+          </select>
+        </div>
+
+        <div><label>Preferred Schedule / Time Window</label><input id="prefTime" placeholder="e.g., mornings, after 2pm"/></div>
+        <div><label>Allergies / sensitivities</label><input id="allergies" placeholder="e.g., fragrance-free"/></div>
+        <div><label>Pets (names)</label><input id="pets" placeholder="e.g., Luna, Max"/></div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>Notes</label>
+        <textarea id="notes" placeholder="Notes for walkthrough..."></textarea>
+      </div>
+    </div>
+
+    <!-- Tasks render here -->
+    <div id="taskSections"></div>
+
+    <!-- Sticky footer -->
+    <div class="sticky">
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div><b>Total:</b> <span id="total">$0.00</span></div>
+
+        <label class="emailRow">
+          <input type="checkbox" id="sendEmail" />
+          Email estimate PDF to client
+        </label>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="ghost" onclick="resetAll()">Reset</button>
+        <button class="save" onclick="saveFinal()">Save Estimate (PDF)</button>
+      </div>
     </div>
   </div>
 
-  <script src="/admin/estimator/estimator.js" defer></script>
+  <!-- Modal for tier/qty -->
+  <div class="modal" id="modal">
+    <div class="modalCard">
+      <div class="modalTitle" id="modalTitle">Task</div>
+      <div class="note" id="modalHint">Select Tier (pricing only). Client PDF will NOT show tiers.</div>
+
+      <div class="row2" id="tierRow">
+        <div>
+          <label>Tier</label>
+          <select id="tier">
+            <option value="1">Tier 1</option>
+            <option value="2">Tier 2</option>
+            <option value="3">Tier 3</option>
+          </select>
+        </div>
+
+        <div id="qtyWrap">
+          <label>How many?</label>
+          <select id="qty"></select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:14px; justify-content:flex-end;">
+        <button class="ghost" onclick="toggleOff()">Unselect</button>
+        <button class="save" onclick="confirmModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- estimator logic -->
+  <script src="/admin/estimator/estimator.js"></script>
+
+  <!-- Show error banner if estimator.js sets text -->
+  <script>
+    // tiny helper: if estimator.js writes taskError textContent, show card
+    const _taskErr = document.getElementById("taskError");
+    const _obs = new MutationObserver(() => {
+      if (_taskErr && _taskErr.textContent.trim()) _taskErr.style.display = "block";
+    });
+    if (_taskErr) _obs.observe(_taskErr, { childList:true, subtree:true, characterData:true });
+  </script>
 </body>
 </html>
