@@ -11,12 +11,9 @@
       --purple:#5b2a86;
       --blue:#2f7bdc;
       --yellow:#FFD84D;
-      --ink:#111827;
-      --muted:#6b7280;
       --card:rgba(255,255,255,.10);
       --border:rgba(255,255,255,.18);
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -25,7 +22,6 @@
       background: linear-gradient(135deg, var(--purple), var(--blue));
       min-height:100vh;
     }
-
     .topbar{
       padding:18px 18px 14px;
       display:flex;
@@ -33,118 +29,35 @@
       justify-content:space-between;
       gap:12px;
     }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
+    .brand{display:flex;align-items:center;gap:12px;}
     .sun{
-      width:44px;
-      height:44px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.12);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      user-select:none;
+      width:44px;height:44px;border-radius:14px;border:1px solid var(--border);
+      background: rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;
+      font-size:22px;user-select:none;
     }
-
-    .title{
-      font-weight:900;
-      font-size:18px;
-      line-height:1.1;
-    }
-
-    .sub{
-      font-size:12px;
-      color: rgba(255,255,255,.85);
-      margin-top:4px;
-    }
-
-    .accentline{
-      height:4px;
-      background: var(--yellow);
-      border-radius:999px;
-      margin:0 18px;
-    }
-
-    .wrap{
-      max-width:1050px;
-      margin:0 auto;
-      padding:18px;
-    }
-
+    .title{font-weight:900;font-size:18px;line-height:1.1;}
+    .sub{font-size:12px;color: rgba(255,255,255,.85);margin-top:4px;}
+    .accentline{height:4px;background: var(--yellow);border-radius:999px;margin:0 18px;}
+    .wrap{max-width:1050px;margin:0 auto;padding:18px;}
     .status{
-      margin:14px 0 18px;
-      padding:12px 14px;
-      border-radius:14px;
-      background: rgba(255,255,255,.10);
-      border:1px solid var(--border);
-      color:#fff;
-      font-size:14px;
-      white-space:pre-wrap;
+      margin:14px 0 18px;padding:12px 14px;border-radius:14px;
+      background: rgba(255,255,255,.10);border:1px solid var(--border);
+      color:#fff;font-size:14px;white-space:pre-wrap;
     }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-    }
+    .grid{display:grid;grid-template-columns: repeat(3, 1fr);gap:14px;}
     @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
-
     .card{
-      background: var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px rgba(0,0,0,.20);
+      background: var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;
+      backdrop-filter: blur(10px);box-shadow: 0 10px 28px rgba(0,0,0,.20);
     }
-
-    .card h3{
-      margin:0 0 6px;
-      font-size:16px;
-      font-weight:900;
-    }
-
-    .card p{
-      margin:0 0 12px;
-      color: rgba(255,255,255,.86);
-      font-size:13px;
-      line-height:1.5;
-    }
-
+    .card h3{margin:0 0 6px;font-size:16px;font-weight:900;}
+    .card p{margin:0 0 12px;color: rgba(255,255,255,.86);font-size:13px;line-height:1.5;}
     .btn{
-      display:inline-block;
-      width:100%;
-      text-align:center;
-      padding:12px 12px;
-      border-radius:12px;
-      background: var(--yellow);
-      color: #111;
-      font-weight:900;
-      text-decoration:none;
-      border:0;
-      cursor:pointer;
+      display:inline-block;width:100%;text-align:center;padding:12px 12px;border-radius:12px;
+      background: var(--yellow);color: #111;font-weight:900;text-decoration:none;border:0;cursor:pointer;
     }
-
-    .btn.secondary{
-      background: rgba(0,0,0,.20);
-      color:#fff;
-      border:1px solid var(--border);
-    }
-
-    .small{
-      font-size:12px;
-      color: rgba(255,255,255,.80);
-      margin-top:10px;
-      word-break:break-word;
-    }
-
+    .btn.secondary{background: rgba(0,0,0,.20);color:#fff;border:1px solid var(--border);}
+    .small{font-size:12px;color: rgba(255,255,255,.80);margin-top:10px;word-break:break-word;}
     .hidden{ display:none; }
   </style>
 </head>
@@ -176,7 +89,7 @@
 
       <div class="card hidden" id="estimatorCard">
         <h3>Residential Estimator</h3>
-        <p>Open the walkthrough estimator inside the admin panel.</p>
+        <p>Walkthrough estimator inside the admin panel.</p>
         <a class="btn" id="estimatorBtn" href="/admin/estimator/" rel="noopener">Open Estimator</a>
         <div class="small">Only permitted admins can see this card.</div>
       </div>
@@ -192,7 +105,7 @@
     <div class="small" id="debug"></div>
   </div>
 
-  <!-- ✅ IMPORTANT: file must exist at /admin/admin.js -->
-<script src="/assets/js/admin/admin.js"></script>
+  <!-- ✅ must exist at /admin/admin.js -->
+  <script src="/admin/admin.js" defer></script>
 </body>
 </html>
