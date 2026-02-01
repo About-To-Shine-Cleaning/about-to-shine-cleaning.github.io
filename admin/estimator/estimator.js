@@ -7,7 +7,7 @@
 
 (() => {
   // ✅ your working Apps Script URL (the one that pings OK)
-  const API_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+  const API_URL = "https://script.google.com/macros/s/AKfycbyYBG5s4khMRNDsNiHi-v_dieGqpsYxDHCVB1TC-DLq9uqfigu5OVVXb0NQOBp4qDOX/exec";
 
   const estimate_id = "RES-EST-" + Date.now();
   let tasks = [];
