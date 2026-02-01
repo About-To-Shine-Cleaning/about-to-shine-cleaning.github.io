@@ -3,16 +3,49 @@
    - Loads tasks via:  GET ?action=estimate_tasks
    - Saves via:        POST ?action=estimate_save
    - Polls via:        GET ?action=estimate_status&estimate_id=...
+   - v1.5: requires Admin session auth + allows E01/E04 only
 ========================================================= */
 
 (() => {
-  // ✅ your working Apps Script URL (the one that pings OK)
+  // ✅ SAME EXEC as admin panel
   const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
+
+  // ✅ v1.5 access
+  const AUTH_STORAGE = "ats_admin_auth_v1"; // sessionStorage
+  const ESTIMATOR_ALLOWED = ["E01", "E04"];
 
   const estimate_id = "RES-EST-" + Date.now();
   let tasks = [];
   let selections = {};
   let activeTask = null;
+
+  function getSessionAuth(){
+    try {
+      const raw = sessionStorage.getItem(AUTH_STORAGE);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function showGateMessage(msg){
+    setStatus("Error");
+    const app = document.getElementById("app");
+    if (app) {
+      app.innerHTML = `
+        <div class="card">
+          <div style="font-weight:900; margin-bottom:8px;">Estimator access required</div>
+          <div style="white-space:pre-wrap; color:#111827;">${(msg || "").replace(/</g,"&lt;")}</div>
+          <div style="margin-top:12px;">
+            <a class="back" href="/admin/" style="color:#111827; font-weight:900; text-decoration:none;">← Back to Admin</a>
+          </div>
+        </div>
+      `;
+    } else {
+      alert(msg);
+      window.location.href = "/admin/";
+    }
+  }
 
   // ---------- JSONP helper ----------
   function jsonp(url) {
@@ -139,7 +172,6 @@
     activeTask = null;
   }
 
-  // expose to HTML buttons
   window.confirmModal = function(){
     const t = activeTask;
     if (!t) return;
@@ -175,15 +207,14 @@
   };
 
   function calcTotal(){
-    // NOTE: this is only a display estimate.
-    // Server calculates true total from Tier_Pricing.
     let total = 0;
     Object.values(selections).forEach(s => {
       const tier = Number(s.tier || 1);
       const tierPrice = tier===1?10:(tier===2?20:30); // display only
       total += tierPrice * (Number(s.qty)||1);
     });
-    document.getElementById("total").textContent = money(total);
+    const totalEl = document.getElementById("total");
+    if (totalEl) totalEl.textContent = money(total);
   }
 
   async function saveFinal(){
@@ -193,8 +224,7 @@
 
     setStatus("Saving...");
     try {
-      // POST JSON to Apps Script
-      const resp = await fetch(API_URL + "?action=estimate_save", {
+      await fetch(API_URL + "?action=estimate_save", {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
@@ -205,7 +235,6 @@
         })
       });
 
-      // Apps Script replies "OK" immediately; poll status
       await pollStatus(send_email);
     } catch (err) {
       setStatus("Error");
@@ -241,26 +270,33 @@
     alert("Save is taking longer than expected. Check the Estimates_Log / Estimator_Results sheet.");
   }
 
-  // expose to HTML button
   window.saveFinal = saveFinal;
 
   // ---------- BOOT ----------
   async function boot(){
+    // ✅ v1.5 session gate
+    const a = getSessionAuth();
+    if (!a || !a.ok || !a.employeeId) {
+      showGateMessage("Please open the Admin Panel first (NFC token), then tap the Estimator card.");
+      return;
+    }
+    if (!ESTIMATOR_ALLOWED.includes(a.employeeId)) {
+      showGateMessage(`Denied: ${a.employeeId} is not permitted to use the estimator yet.\n\nGo back to Admin.`);
+      return;
+    }
+
     try {
       setStatus("Loading tasks…");
       const res = await jsonp(API_URL + "?action=estimate_tasks");
-      if (!res || !res.ok) {
-        throw new Error(res?.error || "Task load failed");
-      }
+      if (!res || !res.ok) throw new Error(res?.error || "Task load failed");
+
       tasks = res.tasks || [];
       render();
       setStatus("Draft");
     } catch (err) {
       setStatus("Error");
       const msg = (err?.message || err || "").toString();
-      const banner = document.getElementById("taskError");
-      if (banner) banner.textContent = "Task load failed:\n" + msg;
-      else alert("Task load failed: " + msg);
+      alert("Task load failed: " + msg);
     }
   }
 
