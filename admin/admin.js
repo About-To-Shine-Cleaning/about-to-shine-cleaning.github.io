@@ -1,16 +1,23 @@
 /* =========================================================
-   ATS Admin Panel (NFC Protected) — v1.5 + estimator card
+   ATS Admin Panel (NFC Protected) — v1.5
+   - JSONP ping/auth to Apps Script (iPhone-safe)
+   - Device binding via localStorage device key
+   - Removes token from URL after successful auth
+   - Shows Estimator card only for allowed admins
 ========================================================= */
-(() => {
-  // ✅ Your working Apps Script URL (AUTH API)
-  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
-  // ✅ Estimator allowed admins (for now)
+(() => {
+  // ✅ YOUR CURRENT APPS SCRIPT EXEC (admin auth + estimator api)
+  const API_URL = "AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp";
+
+  // ✅ Who can see the Estimator card (you said: E01 + E04 for now)
   const ESTIMATOR_ALLOWED = ["E01", "E04"];
 
+  // Storage keys
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
   const AUTH_STORAGE = "ats_admin_auth_v1"; // sessionStorage
 
+  // Elements
   const statusEl = document.getElementById("status");
   const whoEl = document.getElementById("who");
   const cardsEl = document.getElementById("cards");
@@ -24,7 +31,7 @@
 
   function getDeviceKey(){
     let key = localStorage.getItem(DEVICE_KEY_STORAGE);
-    if (!key){
+    if (!key) {
       key = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
       localStorage.setItem(DEVICE_KEY_STORAGE, key);
     }
@@ -39,6 +46,7 @@
     }catch(e){}
   }
 
+  // JSONP helper
   function jsonp(url){
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Math.random().toString(36).slice(2);
@@ -64,29 +72,37 @@
     });
   }
 
-  async function ping(){ return jsonp(`${API_URL}?action=ping`); }
+  async function ping(){
+    return jsonp(`${API_URL}?action=ping`);
+  }
 
   async function auth(token, deviceKey){
     return jsonp(
-      `${API_URL}?action=auth&t=${encodeURIComponent(token)}&d=${encodeURIComponent(deviceKey)}`
+      `${API_URL}?action=auth` +
+      `&t=${encodeURIComponent(token)}` +
+      `&d=${encodeURIComponent(deviceKey)}`
     );
-  }
-
-  function saveSessionAuth(obj){
-    try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(obj)); } catch(e){}
   }
 
   function showCards(employeeId, employeeName){
     if (whoEl) whoEl.textContent = `${employeeId} • ${employeeName}`;
+
+    // Clock link (your existing clock page)
     if (clockBtn) clockBtn.href = `/clock.html?emp=${encodeURIComponent(employeeId)}`;
 
-    if (estimatorBtn) estimatorBtn.href = "/admin/estimator/";
-    if (estimatorCard){
+    // Estimator card: show only allowed
+    if (estimatorCard) {
       if (ESTIMATOR_ALLOWED.includes(employeeId)) estimatorCard.classList.remove("hidden");
       else estimatorCard.classList.add("hidden");
     }
 
+    if (estimatorBtn) estimatorBtn.href = "/admin/estimator/";
+
     if (cardsEl) cardsEl.classList.remove("hidden");
+  }
+
+  function saveSessionAuth(obj){
+    try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(obj)); } catch(e){}
   }
 
   async function boot(){
@@ -94,12 +110,18 @@
     const token = url.searchParams.get("t") || "";
     const deviceKey = getDeviceKey();
 
-    if (!token){
-      setStatus("Denied: missing token.\n\nUse NFC link with:\nhttps://abouttoshinecleaning.com/admin/?t=YOURTOKEN");
+    setDebug(`API_URL: ${API_URL}`);
+
+    if (!token) {
+      setStatus(
+        "Denied: missing token.\n\n" +
+        "Use NFC link that includes:\n" +
+        "https://abouttoshinecleaning.com/admin/?t=YOURTOKEN"
+      );
       return;
     }
 
-    try{
+    try {
       setStatus("Checking secure API (ping)…");
       const p = await ping();
       if (!p || !p.ok) throw new Error("Ping did not return ok");
@@ -107,8 +129,8 @@
       setStatus("Checking access…");
       const res = await auth(token, deviceKey);
 
-      if (!res || !res.ok){
-        setStatus(`Denied: ${res && res.error ? res.error : "unauthorized"}\n\n${JSON.stringify(res || {}, null, 2)}`);
+      if (!res || !res.ok) {
+        setStatus(`Denied: ${res?.error || "unauthorized"}\n\n${JSON.stringify(res || {}, null, 2)}`);
         return;
       }
 
@@ -117,7 +139,7 @@
         employeeId: res.employeeId,
         employeeName: res.employeeName,
         role: res.role,
-        authedAt: new Date().toISOString()
+        authedAt: new Date().toISOString(),
       };
 
       saveSessionAuth(authObj);
@@ -126,16 +148,19 @@
       setStatus("Access granted ✅");
       removeTokenFromUrl();
       setDebug("Device binding active. Token removed from address bar.");
-    }catch(err){
+    } catch (err) {
       setStatus(
         "Error: Could not reach secure API.\n\n" +
         `Page: ${window.location.href}\n` +
         `API_URL: ${API_URL}\n` +
-        `Ping/Auth failed: ${String(err && err.message ? err.message : err)}`
+        `Ping/Auth failed: ${String(err?.message || err)}`
       );
     }
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-  else boot();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
 })();
