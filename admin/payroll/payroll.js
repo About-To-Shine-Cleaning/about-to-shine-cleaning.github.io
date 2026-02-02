@@ -1,6 +1,8 @@
 /* =========================================================
    ATS Payroll (Admin UI) — v2.1
-   ✅ Reads token from sessionStorage OR localStorage (Option A bookmark safe)
+   ✅ Uses unified Apps Script backend (JSONP)
+   ✅ Reads token from sessionStorage OR ?t= in URL (fixes missing token)
+   ✅ Payments table: one row per employee per period + PAID button
 ========================================================= */
 
 (() => {
@@ -9,7 +11,6 @@
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
   const AUTH_STORAGE  = "ats_admin_auth_v1";
   const TOKEN_STORAGE = "ats_admin_token_v1";
-  const TOKEN_LOCAL   = "ats_admin_token_local_v1";
 
   const pillWho = document.getElementById("pillWho");
   const statusBox = document.getElementById("statusBox");
@@ -35,6 +36,11 @@
   const payoutBody = document.getElementById("payoutBody");
   const payoutTotals = document.getElementById("payoutTotals");
 
+  // ✅ Payments UI
+  const paymentsHint = document.getElementById("paymentsHint");
+  const paymentsBody = document.getElementById("paymentsBody");
+  const paymentsTotals = document.getElementById("paymentsTotals");
+
   let currentPeriodId = "";
 
   function setStatus(msg, kind) {
@@ -55,16 +61,24 @@
     return key;
   }
 
-  function getToken() {
+  function getTokenFromSession() {
+    try { return (sessionStorage.getItem(TOKEN_STORAGE) || "").trim(); } catch (e) { return ""; }
+  }
+  function saveTokenToSession(token) {
+    try { sessionStorage.setItem(TOKEN_STORAGE, token); } catch (e) {}
+  }
+
+  // ✅ If you land here with /admin/payroll/?t=TOKEN capture it once, then remove it
+  function captureTokenFromUrl() {
     try {
-      const s = (sessionStorage.getItem(TOKEN_STORAGE) || "").trim();
-      if (s) return s;
+      const url = new URL(window.location.href);
+      const t = (url.searchParams.get("t") || "").trim();
+      if (t) {
+        saveTokenToSession(t);
+        url.searchParams.delete("t");
+        window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+      }
     } catch (e) {}
-    try {
-      const l = (localStorage.getItem(TOKEN_LOCAL) || "").trim();
-      if (l) return l;
-    } catch (e) {}
-    return "";
   }
 
   function loadSessionAuth() {
@@ -95,6 +109,7 @@
       .replaceAll("'", "&#039;");
   }
 
+  // JSONP helper
   function jsonp(url) {
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Math.random().toString(36).slice(2);
@@ -121,18 +136,40 @@
   }
 
   function secureUrl(action, extraQs = "") {
-    const t = getToken();
+    const t = getTokenFromSession();
     const d = getDeviceKey();
     const base = `${API_URL}?action=${encodeURIComponent(action)}&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`;
     return extraQs ? (base + "&" + extraQs) : base;
   }
 
   async function ping() { return jsonp(`${API_URL}?action=ping`); }
+
   async function payrollCurrent() { return jsonp(secureUrl("payroll_current")); }
   async function payrollSummary(periodId) { return jsonp(secureUrl("payroll_summary", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollGenerate(periodId){ return jsonp(secureUrl("payroll_generate", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollLock(periodId){ return jsonp(secureUrl("payroll_lock", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollPayouts(periodId){ return jsonp(secureUrl("payroll_payouts", `period_id=${encodeURIComponent(periodId)}`)); }
+
+  // ✅ NEW
+  async function payrollPayments(periodId){ return jsonp(secureUrl("payroll_payments", `period_id=${encodeURIComponent(periodId)}`)); }
+
+  async function payrollMarkPaid(periodId, employeeId, paidMethod, reference, notes) {
+    const t = getTokenFromSession();
+    const d = getDeviceKey();
+
+    return fetch(`${API_URL}?action=payroll_mark_paid&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        periodId,
+        employeeId,
+        paid: true,
+        paidMethod: paidMethod || "",
+        reference: reference || "",
+        notes: notes || ""
+      })
+    });
+  }
 
   function renderPeriod(p) {
     currentPeriodId = p?.periodId || "";
@@ -159,11 +196,11 @@
       const lu = r.lastUpdate || "";
       return `
         <tr>
-          <td>${escapeHtml(emp)}</td>
-          <td class="right">${jobs}</td>
-          <td class="right">$${pay}</td>
-          <td class="right">${exc}</td>
-          <td>${escapeHtml(lu)}</td>
+          <td style="padding:10px 12px;">${escapeHtml(emp)}</td>
+          <td class="right" style="padding:10px 12px;">${jobs}</td>
+          <td class="right" style="padding:10px 12px;">$${pay}</td>
+          <td class="right" style="padding:10px 12px;">${exc}</td>
+          <td style="padding:10px 12px;">${escapeHtml(lu)}</td>
         </tr>
       `;
     }).join("");
@@ -197,10 +234,10 @@
 
     payoutBody.innerHTML = rows.map(r => `
       <tr>
-        <td>${escapeHtml(r.employee)}</td>
-        <td>${escapeHtml(r.date)}</td>
-        <td>${escapeHtml(r.job)}</td>
-        <td class="right">$${escapeHtml(r.pay)}</td>
+        <td style="padding:10px 12px;">${escapeHtml(r.employee)}</td>
+        <td style="padding:10px 12px;">${escapeHtml(r.date)}</td>
+        <td style="padding:10px 12px;">${escapeHtml(r.job)}</td>
+        <td class="right" style="padding:10px 12px;">$${escapeHtml(r.pay)}</td>
       </tr>
     `).join("");
 
@@ -210,17 +247,100 @@
     payoutCard.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function renderPayments(rows, period) {
+    if (!paymentsBody) return;
+
+    const data = Array.isArray(rows) ? rows : [];
+    const start = period?.startDate || (data[0]?.startDate || "");
+    const end   = period?.endDate   || (data[0]?.endDate || "");
+
+    if (paymentsHint) {
+      paymentsHint.textContent = (start && end) ? `One line per employee • ${start} → ${end}` : "One line per employee for this period.";
+    }
+
+    if (!data.length) {
+      paymentsBody.innerHTML = `<tr><td colspan="5" style="color:#6b7280">No payment rows yet.</td></tr>`;
+      if (paymentsTotals) paymentsTotals.textContent = "";
+      return;
+    }
+
+    const grand = data.reduce((sum, r) => sum + Number(r.totalPay || 0), 0);
+    if (paymentsTotals) paymentsTotals.textContent = `Grand Total: $${grand.toFixed(2)}`;
+
+    paymentsBody.innerHTML = data.map(r => {
+      const empName = r.employeeName || r.employeeId || "—";
+      const periodText = `${r.startDate || start} → ${r.endDate || end}`;
+      const total = Number(r.totalPay || 0).toFixed(2);
+
+      const status = r.paid
+        ? `✔ PAID${r.paidAt ? " • " + escapeHtml(r.paidAt) : ""}`
+        : "NOT PAID";
+
+      const btn = r.paid
+        ? `<button class="btn secondary" disabled style="width:auto; padding:10px 12px; border-radius:12px;">PAID</button>`
+        : `<button class="btn" data-emp="${escapeHtml(r.employeeId)}" style="width:auto; padding:10px 12px; border-radius:12px;">Mark Paid</button>`;
+
+      return `
+        <tr>
+          <td style="padding:10px 12px;">${escapeHtml(empName)}</td>
+          <td style="padding:10px 12px;">${escapeHtml(periodText)}</td>
+          <td class="right" style="padding:10px 12px;">$${escapeHtml(total)}</td>
+          <td style="padding:10px 12px;">${status}</td>
+          <td class="right" style="padding:10px 12px;">${btn}</td>
+        </tr>
+      `;
+    }).join("");
+
+    paymentsBody.querySelectorAll("button[data-emp]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const empId = btn.getAttribute("data-emp");
+        if (!empId || !currentPeriodId) return;
+
+        const ok = confirm(`Mark ${empId} as PAID for ${currentPeriodId}?`);
+        if (!ok) return;
+
+        const method = prompt("Paid method? (Check / ACH / Cash)", "Check") || "";
+        const reference = prompt("Reference? (optional: check # / bank ref)", "") || "";
+        const notes = prompt("Notes? (optional)", "") || "";
+
+        try {
+          setStatus("Marking as paid…");
+          await payrollMarkPaid(currentPeriodId, empId, method, reference, notes);
+          await refreshPaymentsOnly();
+          setStatus("Paid saved ✅", "ok");
+        } catch (err) {
+          setStatus(String(err?.message || err), "err");
+        }
+      });
+    });
+  }
+
+  async function refreshPaymentsOnly() {
+    if (!currentPeriodId) return;
+    const pay = await payrollPayments(currentPeriodId);
+    if (!pay || !pay.ok) throw new Error(pay?.error || "payroll_payments failed");
+    renderPayments(pay.rows, pay.period);
+  }
+
   async function refreshAll() {
     setStatus("Loading current pay period…");
     const cur = await payrollCurrent();
     if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_current failed");
     renderPeriod(cur.period);
 
+    if (!currentPeriodId) {
+      setStatus("No current period id returned.", "err");
+      return;
+    }
+
     setStatus("Loading summary…");
     const sum = await payrollSummary(currentPeriodId);
     if (!sum || !sum.ok) throw new Error(sum?.error || "payroll_summary failed");
-
     renderSummary(sum.rows);
+
+    setStatus("Loading payments…");
+    await refreshPaymentsOnly();
+
     setStatus("Ready ✅", "ok");
   }
 
@@ -241,7 +361,7 @@
       const address = prompt("Address (optional):", "");
       const notes = prompt("Notes (optional):", "");
 
-      const t = getToken();
+      const t = getTokenFromSession();
       const d = getDeviceKey();
 
       setStatus("Adding one-off job to Overrides…");
@@ -262,18 +382,20 @@
   async function boot() {
     setDebug(`API_URL: ${API_URL}`);
 
-    // If token missing, send back to Admin panel sign-in
-    const token = getToken();
-    if (!token) {
-      setStatus("Denied: missing token.\n\nOpen /admin/ and sign in.", "err");
+    captureTokenFromUrl();
+
+    const authObj = loadSessionAuth();
+    if (!requireAdmin(authObj)) {
+      setStatus("Denied: admin access required.\n\nOpen this from the Admin Panel.", "err");
       if (pillWho) pillWho.textContent = "Denied";
       return;
     }
+    setWho(authObj);
 
-    const authObj = loadSessionAuth();
-    // If auth object missing (new tab, refresh, etc.), still allow—backend enforces admin + device binding.
-    if (requireAdmin(authObj)) setWho(authObj);
-    else if (pillWho) pillWho.textContent = "Admin";
+    if (!getTokenFromSession()) {
+      setStatus("Denied: missing token.\n\nOpen from Admin Panel or use a link with ?t=TOKEN once.", "err");
+      return;
+    }
 
     setStatus("Checking secure API…");
     const p = await ping();
@@ -285,6 +407,7 @@
 
     if (btnGenerate) btnGenerate.onclick = async () => {
       try {
+        if (!currentPeriodId) return;
         setStatus("Generating / rebuilding summary…");
         const res = await payrollGenerate(currentPeriodId);
         if (!res || !res.ok) throw new Error(res?.error || "payroll_generate failed");
@@ -296,6 +419,7 @@
 
     if (btnLock) btnLock.onclick = async () => {
       try {
+        if (!currentPeriodId) return;
         const ok = confirm(`Lock payroll period ${currentPeriodId}?`);
         if (!ok) return;
         setStatus("Locking period…");
@@ -311,6 +435,7 @@
 
     if (btnPayouts) btnPayouts.onclick = async () => {
       try {
+        if (!currentPeriodId) return;
         setStatus("Loading job breakdown…");
         const res = await payrollPayouts(currentPeriodId);
         if (!res || !res.ok) throw new Error(res?.error || "payroll_payouts failed");
