@@ -1,11 +1,11 @@
 /* =========================================================
-   ATS Admin Panel (NFC Protected) — v1.6
+   ATS Admin Panel (NFC Protected) — v1.6.1
    ✅ JSONP ping/auth to Apps Script (iPhone-safe)
    ✅ Device binding via localStorage device key
-   ✅ Removes token from URL after successful auth
    ✅ Stores token for other admin pages (payroll/estimator)
-   ✅ Passes token to payroll/estimator links as fallback (iPhone safe)
-   ✅ Shows Estimator card only for E01 + E04
+   ✅ Fixes navigation “Denied: missing token” (rehydrate token)
+   ✅ Bookmark-safe token support via hash: /admin/#t=TOKEN
+   ✅ Optional keep mode via ?keep=1 (keeps token in URL)
 ========================================================= */
 
 (() => {
@@ -31,12 +31,8 @@
   const estimatorBtn = document.getElementById("estimatorBtn");
   const payrollBtn = document.getElementById("payrollBtn");
 
-  function setStatus(msg) {
-    if (statusEl) statusEl.textContent = msg || "";
-  }
-  function setDebug(msg) {
-    if (debugEl) debugEl.textContent = msg || "";
-  }
+  function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ""; }
+  function setDebug(msg) { if (debugEl) debugEl.textContent = msg || ""; }
 
   function getDeviceKey() {
     let key = localStorage.getItem(DEVICE_KEY_STORAGE);
@@ -47,11 +43,54 @@
     return key;
   }
 
+  function getTokenFromSession() {
+    try { return (sessionStorage.getItem(TOKEN_STORAGE) || "").trim(); } catch (e) { return ""; }
+  }
+
+  function getTokenFromUrlOrHash_() {
+    try {
+      const url = new URL(window.location.href);
+      const t1 = (url.searchParams.get("t") || "").trim();
+      if (t1) return t1;
+
+      // Bookmark-safe: https://site/admin/#t=TOKEN
+      const h = (url.hash || "").replace(/^#/, "");
+      const params = new URLSearchParams(h);
+      return (params.get("t") || "").trim();
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function keepTokenInAddressBar_() {
+    try {
+      const url = new URL(window.location.href);
+      // Keep if explicitly requested OR token came from hash
+      if ((url.searchParams.get("keep") || "") === "1") return true;
+      if ((url.hash || "").includes("t=")) return true;
+    } catch (e) {}
+    return false;
+  }
+
   function removeTokenFromUrl() {
     try {
       const url = new URL(window.location.href);
       url.searchParams.delete("t");
-      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+      // keep hash untouched (bookmark mode)
+      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + (url.hash || ""));
+    } catch (e) {}
+  }
+
+  function removeTokenFromHash_() {
+    // If you ever want to strip hash tokens too (we DON'T by default)
+    try {
+      const url = new URL(window.location.href);
+      if (!url.hash) return;
+      const h = (url.hash || "").replace(/^#/, "");
+      const params = new URLSearchParams(h);
+      params.delete("t");
+      const newHash = params.toString();
+      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + (newHash ? ("#" + newHash) : ""));
     } catch (e) {}
   }
 
@@ -72,10 +111,7 @@
         finally { cleanup(); }
       };
 
-      script.onerror = () => {
-        cleanup();
-        reject(new Error("JSONP failed to load: " + url));
-      };
+      script.onerror = () => { cleanup(); reject(new Error("JSONP failed to load: " + url)); };
 
       script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
       document.body.appendChild(script);
@@ -102,19 +138,20 @@
     try { sessionStorage.setItem(TOKEN_STORAGE, token); } catch (e) {}
   }
 
-  // ✅ fallback: if sessionStorage is blocked (some iOS cases), we still pass ?t=TOKEN in links
-  function getStoredTokenOr(tokenFromUrl) {
-    try {
-      const t = sessionStorage.getItem(TOKEN_STORAGE);
-      if (t) return t;
-    } catch (e) {}
-    return tokenFromUrl || "";
+  function ensureToken_() {
+    // Prefer session token, otherwise use URL/hash and store into session
+    let t = getTokenFromSession();
+    if (t) return t;
+
+    t = getTokenFromUrlOrHash_();
+    if (t) saveSessionToken(t);
+    return t;
   }
 
-  function showCards(employeeId, employeeName, tokenForLinks) {
+  function showCards(employeeId, employeeName, token) {
     if (whoEl) whoEl.textContent = `${employeeId} • ${employeeName}`;
 
-    // Clock link
+    // Clock link (employee clock has its own rules)
     if (clockBtn) clockBtn.href = `/clock.html?emp=${encodeURIComponent(employeeId)}`;
 
     // Estimator card only for allowed list
@@ -123,27 +160,30 @@
       else estimatorCard.classList.add("hidden");
     }
 
-    // ✅ Add token fallback to estimator/payroll links
-    const tParam = tokenForLinks ? `?t=${encodeURIComponent(tokenForLinks)}` : "";
+    // ✅ Navigation fix:
+    // Use HASH token (bookmark-safe) so other pages can rehydrate even if sessionStorage is lost.
+    // Example: /admin/payroll/#t=TOKEN
+    const tHash = token ? `#t=${encodeURIComponent(token)}` : "";
 
-    if (estimatorBtn) estimatorBtn.href = `/admin/estimator/${tParam}`;
-    if (payrollBtn) payrollBtn.href = `/admin/payroll/${tParam}`;
+    if (estimatorBtn) estimatorBtn.href = `/admin/estimator/${tHash}`;
+    if (payrollBtn) payrollBtn.href = `/admin/payroll/${tHash}`;
 
     if (cardsEl) cardsEl.classList.remove("hidden");
   }
 
   async function boot() {
-    const url = new URL(window.location.href);
-    const tokenFromUrl = (url.searchParams.get("t") || "").trim();
     const deviceKey = getDeviceKey();
-
     setDebug(`API_URL: ${API_URL}`);
 
-    if (!tokenFromUrl) {
+    const token = ensureToken_();
+
+    if (!token) {
       setStatus(
         "Denied: missing token.\n\n" +
         "Use NFC link that includes:\n" +
-        "https://abouttoshinecleaning.com/admin/?t=YOURTOKEN"
+        "https://abouttoshinecleaning.com/admin/?t=YOURTOKEN\n\n" +
+        "Or bookmark-safe:\n" +
+        "https://abouttoshinecleaning.com/admin/#t=YOURTOKEN"
       );
       return;
     }
@@ -152,11 +192,9 @@
       setStatus("Checking secure API (ping)…");
       const p = await ping();
 
-      // ✅ better debug if ping returns something unexpected
       if (!p || p.ok !== true) {
         setStatus(
           "Error: ping failed.\n\n" +
-          "This means your Apps Script web app did NOT respond with {ok:true}.\n\n" +
           `Ping response:\n${JSON.stringify(p || {}, null, 2)}\n\n` +
           `API_URL:\n${API_URL}`
         );
@@ -164,7 +202,7 @@
       }
 
       setStatus("Checking access…");
-      const res = await auth(tokenFromUrl, deviceKey);
+      const res = await auth(token, deviceKey);
 
       if (!res || !res.ok) {
         setStatus(
@@ -183,14 +221,25 @@
       };
 
       saveSessionAuth(authObj);
-      saveSessionToken(tokenFromUrl);
+      saveSessionToken(token);
 
-      const tokenForLinks = getStoredTokenOr(tokenFromUrl);
-      showCards(res.employeeId, res.employeeName, tokenForLinks);
+      showCards(res.employeeId, res.employeeName, token);
 
       setStatus("Access granted ✅");
-      removeTokenFromUrl();
-      setDebug("Device binding active. Token saved. Token removed from address bar.");
+
+      // ✅ Only strip query token if not in keep mode and not using hash bookmark
+      if (!keepTokenInAddressBar_()) {
+        removeTokenFromUrl();
+        // We intentionally do NOT remove the hash token because it’s your bookmark-safe mode.
+      }
+
+      setDebug(
+        "Device binding active. Token saved.\n" +
+        (keepTokenInAddressBar_()
+          ? "Token kept for bookmark mode."
+          : "Token removed from address bar (query string).") +
+        "\nNavigation uses #t= token for reliability across pages."
+      );
     } catch (err) {
       setStatus(
         "Error: Could not reach secure API.\n\n" +
