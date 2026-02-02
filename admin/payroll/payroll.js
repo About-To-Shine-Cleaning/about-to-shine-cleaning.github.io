@@ -5,7 +5,7 @@
 ========================================================= */
 
 (() => {
-  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxZdZi2eojV04LBbXikTIrg60WKvX21BGijgpqLdBdwjPiJquC_GzBudMvXgcu0oMGd/exec";
 
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
   const AUTH_STORAGE  = "ats_admin_auth_v1";
