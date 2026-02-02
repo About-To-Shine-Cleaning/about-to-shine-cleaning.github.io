@@ -1,1 +1,172 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ATS Payroll</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+
+  <style>
+    :root{
+      --purple:#5b2a86;
+      --blue:#2f7bdc;
+      --yellow:#FFD84D;
+      --ink:#111827;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --bg:#f6f7fb;
+      --danger:#b91c1c;
+      --ok:#065f46;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--ink)}
+    .letterhead{
+      background:linear-gradient(90deg,var(--purple),var(--blue));
+      color:#fff; padding:16px 18px 14px;
+      position:sticky; top:0; z-index:5;
+    }
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+    .brand{font-weight:900; font-size:18px}
+    .subtitle{opacity:.92; font-size:13px}
+    .line{height:4px; background:var(--yellow); margin-top:10px; border-radius:999px}
+    a.back{color:#fff; text-decoration:none; font-weight:900;}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:14px}
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+      margin:12px 0;
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+    }
+
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.22);
+      color:#fff; font-weight:900; font-size:12px;
+    }
+
+    .status{
+      white-space:pre-wrap;
+      color:#111827;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+    }
+    .status.ok{border-color:#bbf7d0; background:#f0fdf4}
+    .status.err{border-color:#fecaca; background:#fef2f2; color:var(--danger)}
+
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:12px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    button{
+      border:0; border-radius:12px; padding:10px 12px;
+      font-weight:900; cursor:pointer;
+    }
+    .primary{background:var(--purple); color:#fff}
+    .ghost{background:#fff; border:1px solid var(--border)}
+    .danger{background:#b91c1c; color:#fff}
+
+    .metaLine{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:13px}
+    .kv{display:flex; gap:8px; align-items:center}
+    .k{font-weight:900; color:#111827}
+
+    table{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px}
+    th, td{border-bottom:1px solid var(--border); padding:10px 8px; text-align:left; vertical-align:top}
+    th{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+    .right{text-align:right}
+    .small{font-size:12px; color:var(--muted); margin-top:8px; white-space:pre-wrap}
+  </style>
+</head>
+
+<body>
+  <div class="letterhead">
+    <div class="row">
+      <div>
+        <div class="brand">About To Shine Cleaning</div>
+        <div class="subtitle">Payroll (Admin)</div>
+      </div>
+      <div class="row" style="gap:10px">
+        <a class="back" href="/admin/">← Admin</a>
+        <div class="pill" id="pillWho">Checking…</div>
+      </div>
+    </div>
+    <div class="line"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="status" id="statusBox">Loading…</div>
+      <div class="small" id="debug"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin:0 0 8px;">Current Pay Period</h3>
+        <div class="metaLine">
+          <div class="kv"><span class="k">Period:</span> <span id="periodId">—</span></div>
+          <div class="kv"><span class="k">Start:</span> <span id="periodStart">—</span></div>
+          <div class="kv"><span class="k">End:</span> <span id="periodEnd">—</span></div>
+          <div class="kv"><span class="k">Payday:</span> <span id="periodPayday">—</span></div>
+          <div class="kv"><span class="k">Status:</span> <span id="periodStatus">—</span></div>
+        </div>
+
+        <div class="btnRow">
+          <button class="primary" id="btnGenerate">Generate / Rebuild Summary</button>
+          <button class="ghost" id="btnRefresh">Refresh</button>
+          <button class="danger" id="btnLock">Lock Period</button>
+        </div>
+
+        <div class="small">
+Pay period rule (locked for now):
+• Starts Friday
+• Ends Thursday
+• Payday Friday
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 8px;">What this calculates</h3>
+        <div class="small" style="margin-top:0">
+• Uses your Logs sheet
+• Counts jobs from Action = "Clock Out"
+• TotalPay = sum(Job Pay) for that period
+• Keeps Payroll_Periods + Payroll_Summary separate (recommended)
+        </div>
+        <div class="small" id="calcNote"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 8px;">Payroll Summary</h3>
+      <div class="small" id="summaryHint">—</div>
+      <div style="overflow:auto">
+        <table id="summaryTable">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th class="right">Jobs Completed</th>
+              <th class="right">Total Pay</th>
+              <th class="right">Exceptions</th>
+              <th>Last Update</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody">
+            <tr><td colspan="5" style="color:#6b7280">No data yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/payroll/payroll.js"></script>
+</body>
+</html>
