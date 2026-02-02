@@ -1,14 +1,15 @@
 /* =========================================================
-   ATS Admin Panel (NFC Protected) — v1.5
+   ATS Admin Panel (NFC Protected) — v1.6
    ✅ JSONP ping/auth to Apps Script (iPhone-safe)
    ✅ Device binding via localStorage device key
    ✅ Removes token from URL after successful auth
    ✅ Stores token for other admin pages (payroll/estimator)
+   ✅ Passes token to payroll/estimator links as fallback (iPhone safe)
    ✅ Shows Estimator card only for E01 + E04
 ========================================================= */
 
 (() => {
-  // ✅ NEW Apps Script URL (your message)
+  // ✅ Unified Apps Script URL (admin/estimator/payroll backend)
   const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
   // ✅ Estimator allowed admins (for now)
@@ -19,11 +20,12 @@
   const AUTH_STORAGE = "ats_admin_auth_v1";       // sessionStorage (who/role)
   const TOKEN_STORAGE = "ats_admin_token_v1";     // sessionStorage (token for other admin pages)
 
-  // Elements (safe if missing)
+  // Elements
   const statusEl = document.getElementById("status");
   const whoEl = document.getElementById("who");
   const cardsEl = document.getElementById("cards");
   const debugEl = document.getElementById("debug");
+
   const clockBtn = document.getElementById("clockBtn");
   const estimatorCard = document.getElementById("estimatorCard");
   const estimatorBtn = document.getElementById("estimatorBtn");
@@ -45,7 +47,6 @@
     return key;
   }
 
-  // Remove token from URL (after auth)
   function removeTokenFromUrl() {
     try {
       const url = new URL(window.location.href);
@@ -54,25 +55,25 @@
     } catch (e) {}
   }
 
-  // JSONP helper (CORS-safe + iPhone safe)
+  // JSONP helper
   function jsonp(url) {
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Math.random().toString(36).slice(2);
-
       const script = document.createElement("script");
       script.async = true;
 
+      const cleanup = () => {
+        try { delete window[cb]; } catch (e) {}
+        try { script.remove(); } catch (e) {}
+      };
+
       window[cb] = (data) => {
         try { resolve(data); }
-        finally {
-          try { delete window[cb]; } catch (e) {}
-          try { script.remove(); } catch (e) {}
-        }
+        finally { cleanup(); }
       };
 
       script.onerror = () => {
-        try { delete window[cb]; } catch (e) {}
-        try { script.remove(); } catch (e) {}
+        cleanup();
         reject(new Error("JSONP failed to load: " + url));
       };
 
@@ -97,15 +98,23 @@
     try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(authObj)); } catch (e) {}
   }
 
-  // ✅ Store token for other admin pages (payroll/estimator)
   function saveSessionToken(token) {
     try { sessionStorage.setItem(TOKEN_STORAGE, token); } catch (e) {}
   }
 
-  function showCards(employeeId, employeeName) {
+  // ✅ fallback: if sessionStorage is blocked (some iOS cases), we still pass ?t=TOKEN in links
+  function getStoredTokenOr(tokenFromUrl) {
+    try {
+      const t = sessionStorage.getItem(TOKEN_STORAGE);
+      if (t) return t;
+    } catch (e) {}
+    return tokenFromUrl || "";
+  }
+
+  function showCards(employeeId, employeeName, tokenForLinks) {
     if (whoEl) whoEl.textContent = `${employeeId} • ${employeeName}`;
 
-    // Clock link (existing system)
+    // Clock link
     if (clockBtn) clockBtn.href = `/clock.html?emp=${encodeURIComponent(employeeId)}`;
 
     // Estimator card only for allowed list
@@ -113,23 +122,24 @@
       if (ESTIMATOR_ALLOWED.includes(employeeId)) estimatorCard.classList.remove("hidden");
       else estimatorCard.classList.add("hidden");
     }
-    if (estimatorBtn) estimatorBtn.href = "/admin/estimator/";
 
-    // Payroll link (v2 UI page — you’ll build /admin/payroll/ next)
-    if (payrollBtn) payrollBtn.href = "/admin/payroll/";
+    // ✅ Add token fallback to estimator/payroll links
+    const tParam = tokenForLinks ? `?t=${encodeURIComponent(tokenForLinks)}` : "";
+
+    if (estimatorBtn) estimatorBtn.href = `/admin/estimator/${tParam}`;
+    if (payrollBtn) payrollBtn.href = `/admin/payroll/${tParam}`;
 
     if (cardsEl) cardsEl.classList.remove("hidden");
   }
 
   async function boot() {
     const url = new URL(window.location.href);
-    const token = (url.searchParams.get("t") || "").trim();
+    const tokenFromUrl = (url.searchParams.get("t") || "").trim();
     const deviceKey = getDeviceKey();
 
-    // Helpful debug info
     setDebug(`API_URL: ${API_URL}`);
 
-    if (!token) {
+    if (!tokenFromUrl) {
       setStatus(
         "Denied: missing token.\n\n" +
         "Use NFC link that includes:\n" +
@@ -141,10 +151,20 @@
     try {
       setStatus("Checking secure API (ping)…");
       const p = await ping();
-      if (!p || !p.ok) throw new Error("Ping did not return ok");
+
+      // ✅ better debug if ping returns something unexpected
+      if (!p || p.ok !== true) {
+        setStatus(
+          "Error: ping failed.\n\n" +
+          "This means your Apps Script web app did NOT respond with {ok:true}.\n\n" +
+          `Ping response:\n${JSON.stringify(p || {}, null, 2)}\n\n` +
+          `API_URL:\n${API_URL}`
+        );
+        return;
+      }
 
       setStatus("Checking access…");
-      const res = await auth(token, deviceKey);
+      const res = await auth(tokenFromUrl, deviceKey);
 
       if (!res || !res.ok) {
         setStatus(
@@ -154,7 +174,6 @@
         return;
       }
 
-      // ✅ authorized
       const authObj = {
         ok: true,
         employeeId: res.employeeId,
@@ -164,12 +183,14 @@
       };
 
       saveSessionAuth(authObj);
-      saveSessionToken(token); // ✅ key fix for payroll/other pages
-      showCards(res.employeeId, res.employeeName);
+      saveSessionToken(tokenFromUrl);
+
+      const tokenForLinks = getStoredTokenOr(tokenFromUrl);
+      showCards(res.employeeId, res.employeeName, tokenForLinks);
 
       setStatus("Access granted ✅");
       removeTokenFromUrl();
-      setDebug("Device binding active. Token saved for other admin pages. Token removed from address bar.");
+      setDebug("Device binding active. Token saved. Token removed from address bar.");
     } catch (err) {
       setStatus(
         "Error: Could not reach secure API.\n\n" +
@@ -180,7 +201,6 @@
     }
   }
 
-  // Run after DOM is ready (prevents blank page on iPhone)
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {
