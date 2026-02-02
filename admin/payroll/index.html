@@ -83,6 +83,9 @@
     th{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
     .right{text-align:right}
     .small{font-size:12px; color:var(--muted); margin-top:8px; white-space:pre-wrap}
+
+    .split{display:grid; grid-template-columns:1fr; gap:12px}
+    .hidden{display:none}
   </style>
 </head>
 
@@ -121,10 +124,8 @@
         <div class="btnRow">
           <button class="primary" id="btnGenerate">Generate / Rebuild Summary</button>
           <button class="ghost" id="btnRefresh">Refresh</button>
-
-          <!-- ✅ NEW BUTTON (wired by payroll.js) -->
           <button class="ghost" id="btnAddOverride">Add One-Off Job</button>
-
+          <button class="ghost" id="btnPayouts">Job Breakdown</button>
           <button class="danger" id="btnLock">Lock Period</button>
         </div>
 
@@ -142,9 +143,8 @@ Pay period rule (locked for now):
 • Uses your Logs sheet
 • Counts jobs from Action = "Clock Out"
 • TotalPay = sum(Job Pay) for that period
-• Keeps Payroll_Periods + Payroll_Summary separate (recommended)
+• Job Breakdown = every Clock Out line item (per employee)
         </div>
-        <div class="small" id="calcNote"></div>
       </div>
     </div>
 
@@ -167,6 +167,25 @@ Pay period rule (locked for now):
           </tbody>
         </table>
       </div>
+    </div>
+
+    <div class="card hidden" id="payoutCard">
+      <h3 style="margin:0 0 8px;">Job Breakdown</h3>
+      <div class="small" id="payoutHint">—</div>
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Date</th>
+              <th>Job</th>
+              <th class="right">Pay</th>
+            </tr>
+          </thead>
+          <tbody id="payoutBody"></tbody>
+        </table>
+      </div>
+      <div class="small" id="payoutTotals"></div>
     </div>
   </div>
 
