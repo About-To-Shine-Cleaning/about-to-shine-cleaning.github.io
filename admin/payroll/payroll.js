@@ -1,29 +1,26 @@
-
 /* =========================================================
    ATS Payroll (Admin UI) — v2 (front-end)
-   - Requires you to be authenticated via /admin/ (v1.5)
-   - Reads sessionStorage set by admin panel:
-     - ats_admin_auth_v1  (employeeId, employeeName, role)
-     - ats_admin_token_v1 (the NFC token used)
-     - ats_device_key_v1  (device binding key)
+   - Requires admin auth (sessionStorage from /admin)
+   - Fallback: accepts ?t=TOKEN to auth directly (device bound)
    - Calls Apps Script via JSONP:
-     GET  ?action=payroll_current_period&t=...&d=...
-     POST ?action=payroll_generate&t=...&d=...
-     GET  ?action=payroll_summary&period_id=...&t=...&d=...
-     POST ?action=payroll_lock&period_id=...&t=...&d=...
+       GET  ?action=ping
+       GET  ?action=auth&t=...&d=...
+       GET  ?action=payroll_current
+       GET  ?action=payroll_summary&period_id=...
+       GET  ?action=payroll_generate&period_id=...
+       GET  ?action=payroll_lock&period_id=...
 ========================================================= */
 
 (() => {
-  // ✅ SET THIS to your PAYROLL Apps Script /exec URL
-  // Example: https://script.google.com/macros/s/AKfy.../exec
-  const PAYROLL_API_URL = "https://script.google.com/macros/s/AKfycbyCCv30Q3l0Gg2zGs2sHD6a9jHm678QQKV_mdTm_GFnjR-xsmaYdDonmlBugX3TeHPiJA/exec";
+  // ✅ IMPORTANT: set this to the SAME unified Apps Script /exec you want Payroll to use
+  // (This should be the script that also supports admin auth.)
+  const API_URL = "https://script.google.com/macros/s/AKfycbyCCv30Q3l0Gg2zGs2sHD6a9jHm678QQKV_mdTm_GFnjR-xsmaYdDonmlBugX3TeHPiJA/exec";
 
-  // Storage keys (must match admin panel)
-  const AUTH_STORAGE = "ats_admin_auth_v1";
-  const TOKEN_STORAGE = "ats_admin_token_v1";
+  // Must match admin.js
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
+  const AUTH_STORAGE = "ats_admin_auth_v1"; // sessionStorage
 
-  // UI
+  // Elements
   const pillWho = document.getElementById("pillWho");
   const statusBox = document.getElementById("statusBox");
   const debugEl = document.getElementById("debug");
@@ -34,21 +31,42 @@
   const periodPaydayEl = document.getElementById("periodPayday");
   const periodStatusEl = document.getElementById("periodStatus");
 
-  const summaryHint = document.getElementById("summaryHint");
-  const summaryBody = document.getElementById("summaryBody");
-
   const btnGenerate = document.getElementById("btnGenerate");
   const btnRefresh = document.getElementById("btnRefresh");
   const btnLock = document.getElementById("btnLock");
 
-  function setStatus(text, kind){
-    statusBox.textContent = text || "";
-    statusBox.classList.remove("ok","err");
-    if (kind) statusBox.classList.add(kind);
+  const summaryHint = document.getElementById("summaryHint");
+  const summaryBody = document.getElementById("summaryBody");
+
+  let currentPeriodId = "";
+
+  function setStatus(msg, kind /* "ok" | "err" | "" */) {
+    if (!statusBox) return;
+    statusBox.classList.remove("ok", "err");
+    if (kind === "ok") statusBox.classList.add("ok");
+    if (kind === "err") statusBox.classList.add("err");
+    statusBox.textContent = msg || "";
   }
 
-  function setDebug(text){
-    debugEl.textContent = text || "";
+  function setDebug(msg) {
+    if (debugEl) debugEl.textContent = msg || "";
+  }
+
+  function getDeviceKey() {
+    let key = localStorage.getItem(DEVICE_KEY_STORAGE);
+    if (!key) {
+      key = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem(DEVICE_KEY_STORAGE, key);
+    }
+    return key;
+  }
+
+  function removeTokenFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("t");
+      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+    } catch (e) {}
   }
 
   // JSONP helper
@@ -77,172 +95,221 @@
     });
   }
 
-  // POST helper (Apps Script returns "OK")
-  async function post(action, payload, token, deviceKey, periodId=""){
-    const url = new URL(PAYROLL_API_URL);
-    url.searchParams.set("action", action);
-    if (periodId) url.searchParams.set("period_id", periodId);
-    url.searchParams.set("t", token);
-    url.searchParams.set("d", deviceKey);
-
-    const resp = await fetch(url.toString(), {
-      method: "POST",
-      headers: {"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify(payload || {})
-    });
-    const txt = await resp.text();
-    return txt;
+  async function ping() {
+    return jsonp(`${API_URL}?action=ping`);
   }
 
-  function money(n){
-    const x = Number(n || 0);
-    return "$" + x.toFixed(2);
-  }
-
-  function loadAuth(){
-    let auth = null;
-    try { auth = JSON.parse(sessionStorage.getItem(AUTH_STORAGE) || "null"); } catch(e){}
-    const token = sessionStorage.getItem(TOKEN_STORAGE) || "";
-    const deviceKey = localStorage.getItem(DEVICE_KEY_STORAGE) || "";
-    return { auth, token, deviceKey };
-  }
-
-  function deny(msg){
-    setStatus(
-      "Denied.\n\n" +
-      (msg || "You must enter Payroll from the Admin Panel after authenticating.") +
-      "\n\nGo back to /admin/ and tap your NFC token again.",
-      "err"
+  async function authWithToken(token) {
+    const deviceKey = getDeviceKey();
+    return jsonp(
+      `${API_URL}?action=auth` +
+      `&t=${encodeURIComponent(token)}` +
+      `&d=${encodeURIComponent(deviceKey)}`
     );
   }
 
-  function renderSummary(rows){
-    if (!Array.isArray(rows) || rows.length === 0){
-      summaryBody.innerHTML = `<tr><td colspan="5" style="color:#6b7280">No summary data for this period yet.</td></tr>`;
+  function loadSessionAuth() {
+    try {
+      const raw = sessionStorage.getItem(AUTH_STORAGE);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (obj && obj.ok && obj.employeeId && obj.role) return obj;
+    } catch (e) {}
+    return null;
+  }
+
+  function saveSessionAuth(obj) {
+    try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(obj)); } catch (e) {}
+  }
+
+  function requireAdmin(authObj) {
+    if (!authObj || !authObj.ok) return false;
+    return String(authObj.role || "").toLowerCase() === "admin";
+  }
+
+  function setWho(authObj) {
+    if (!pillWho) return;
+    pillWho.textContent = `${authObj.employeeId} • ${authObj.employeeName || authObj.employeeId}`;
+  }
+
+  // ---------- Payroll API calls ----------
+  async function payrollCurrent() {
+    return jsonp(`${API_URL}?action=payroll_current`);
+  }
+
+  async function payrollSummary(periodId) {
+    return jsonp(`${API_URL}?action=payroll_summary&period_id=${encodeURIComponent(periodId)}`);
+  }
+
+  async function payrollGenerate(periodId) {
+    return jsonp(`${API_URL}?action=payroll_generate&period_id=${encodeURIComponent(periodId)}`);
+  }
+
+  async function payrollLock(periodId) {
+    return jsonp(`${API_URL}?action=payroll_lock&period_id=${encodeURIComponent(periodId)}`);
+  }
+
+  function renderPeriod(p) {
+    if (!p) return;
+    currentPeriodId = p.periodId || "";
+
+    if (periodIdEl) periodIdEl.textContent = p.periodId || "—";
+    if (periodStartEl) periodStartEl.textContent = p.startDate || "—";
+    if (periodEndEl) periodEndEl.textContent = p.endDate || "—";
+    if (periodPaydayEl) periodPaydayEl.textContent = p.payday || "—";
+    if (periodStatusEl) periodStatusEl.textContent = p.status || "—";
+
+    if (summaryHint) {
+      summaryHint.textContent = currentPeriodId
+        ? `Showing summary for ${currentPeriodId}`
+        : "—";
+    }
+  }
+
+  function renderSummary(rows) {
+    if (!summaryBody) return;
+
+    const data = Array.isArray(rows) ? rows : [];
+    if (!data.length) {
+      summaryBody.innerHTML = `<tr><td colspan="5" style="color:#6b7280">No data yet.</td></tr>`;
       return;
     }
 
-    summaryBody.innerHTML = "";
-    rows.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${(r.employeeName || r.employeeId || "").toString()}</td>
-        <td class="right">${Number(r.jobsCompleted || 0)}</td>
-        <td class="right">${money(r.totalPay || 0)}</td>
-        <td class="right">${Number(r.exceptionCount || 0)}</td>
-        <td>${(r.lastUpdate || "").toString()}</td>
+    summaryBody.innerHTML = data.map(r => {
+      const emp = (r.employeeName || r.employeeId || "—");
+      const jobs = Number(r.jobsCompleted || 0);
+      const pay = Number(r.totalPay || 0).toFixed(2);
+      const exc = Number(r.exceptionCount || 0);
+      const lu = r.lastUpdate || "";
+      return `
+        <tr>
+          <td>${escapeHtml(emp)}</td>
+          <td class="right">${jobs}</td>
+          <td class="right">$${pay}</td>
+          <td class="right">${exc}</td>
+          <td>${escapeHtml(lu)}</td>
+        </tr>
       `;
-      summaryBody.appendChild(tr);
-    });
+    }).join("");
   }
 
-  async function apiCurrentPeriod(token, deviceKey){
-    const url = new URL(PAYROLL_API_URL);
-    url.searchParams.set("action","payroll_current_period");
-    url.searchParams.set("t", token);
-    url.searchParams.set("d", deviceKey);
-    return jsonp(url.toString());
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
-  async function apiSummary(periodId, token, deviceKey){
-    const url = new URL(PAYROLL_API_URL);
-    url.searchParams.set("action","payroll_summary");
-    url.searchParams.set("period_id", periodId);
-    url.searchParams.set("t", token);
-    url.searchParams.set("d", deviceKey);
-    return jsonp(url.toString());
-  }
-
-  async function refreshAll(){
-    const { auth, token, deviceKey } = loadAuth();
-
-    if (!auth || !auth.ok || auth.role !== "admin") return deny("No active admin session.");
-    if (!token || !deviceKey) return deny("Missing admin token/device key in storage.");
-
-    pillWho.textContent = `${auth.employeeId} • ${auth.employeeName}`;
-
-    if (!PAYROLL_API_URL || PAYROLL_API_URL.includes("PASTE_YOUR_")) {
-      setStatus("Setup needed: set PAYROLL_API_URL in /admin/payroll/payroll.js", "err");
-      setDebug("PAYROLL_API_URL is not set yet.");
-      return;
-    }
-
+  async function refreshAll() {
     setStatus("Loading current pay period…");
-    setDebug(`PAYROLL_API_URL: ${PAYROLL_API_URL}`);
+    const cur = await payrollCurrent();
+    if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_current failed");
 
-    const p = await apiCurrentPeriod(token, deviceKey);
-    if (!p || !p.ok){
-      setStatus("Failed to load current period:\n" + (p && p.error ? p.error : "unknown_error"), "err");
+    renderPeriod(cur.period);
+
+    if (!currentPeriodId) {
+      setStatus("No current period id returned.", "err");
       return;
     }
 
-    periodIdEl.textContent = p.periodId || "—";
-    periodStartEl.textContent = p.startDate || "—";
-    periodEndEl.textContent = p.endDate || "—";
-    periodPaydayEl.textContent = p.payDate || "—";
-    periodStatusEl.textContent = p.status || "—";
+    setStatus("Loading summary…");
+    const sum = await payrollSummary(currentPeriodId);
+    if (!sum || !sum.ok) throw new Error(sum?.error || "payroll_summary failed");
 
-    summaryHint.textContent = `Summary for ${p.periodId} (Clock Out entries only)`;
-
-    setStatus("Loading payroll summary…");
-    const s = await apiSummary(p.periodId, token, deviceKey);
-    if (!s || !s.ok){
-      setStatus("Loaded period, but summary failed:\n" + (s && s.error ? s.error : "unknown_error"), "err");
-      renderSummary([]);
-      return;
-    }
-
-    renderSummary(s.rows || []);
+    renderSummary(sum.rows);
     setStatus("Ready ✅", "ok");
   }
 
-  async function generate(){
-    const { auth, token, deviceKey } = loadAuth();
-    if (!auth || !auth.ok || auth.role !== "admin") return deny("No active admin session.");
-    if (!token || !deviceKey) return deny("Missing admin token/device key in storage.");
+  // ---------- Boot ----------
+  async function boot() {
+    setDebug(`API_URL: ${API_URL}`);
 
-    const periodId = periodIdEl.textContent || "";
-    setStatus("Generating payroll summary…");
+    // 1) If we already have a session from /admin, use it
+    let authObj = loadSessionAuth();
 
-    try{
-      const txt = await post("payroll_generate", {}, token, deviceKey, periodId);
-      // Apps Script replies "OK"
-      setDebug("Generate response: " + txt);
-      await refreshAll();
-    }catch(err){
-      setStatus("Generate failed:\n" + (err?.message || err), "err");
+    // 2) If not, but URL has ?t=TOKEN, try to auth here too
+    if (!authObj) {
+      const url = new URL(window.location.href);
+      const token = url.searchParams.get("t") || "";
+      if (token) {
+        setStatus("Authorizing…");
+        const res = await authWithToken(token);
+
+        if (!res || !res.ok) {
+          setStatus(`Denied: ${res?.error || "unauthorized"}`, "err");
+          return;
+        }
+
+        authObj = {
+          ok: true,
+          employeeId: res.employeeId,
+          employeeName: res.employeeName,
+          role: res.role,
+          authedAt: new Date().toISOString(),
+        };
+
+        saveSessionAuth(authObj);
+        removeTokenFromUrl();
+      }
     }
+
+    // 3) Must be admin
+    if (!requireAdmin(authObj)) {
+      setStatus(
+        "Denied: admin access required.\n\n" +
+        "Open this from the Admin Panel OR use an NFC token link.",
+        "err"
+      );
+      if (pillWho) pillWho.textContent = "Denied";
+      return;
+    }
+
+    setWho(authObj);
+
+    // 4) Validate API is reachable
+    setStatus("Checking secure API…");
+    const p = await ping();
+    if (!p || !p.ok) throw new Error("Ping did not return ok");
+
+    // 5) Load payroll
+    await refreshAll();
+
+    // Buttons
+    if (btnRefresh) btnRefresh.onclick = () => refreshAll().catch(err => setStatus(String(err?.message || err), "err"));
+
+    if (btnGenerate) btnGenerate.onclick = async () => {
+      try {
+        if (!currentPeriodId) return;
+        setStatus("Generating / rebuilding summary…");
+        const res = await payrollGenerate(currentPeriodId);
+        if (!res || !res.ok) throw new Error(res?.error || "payroll_generate failed");
+        await refreshAll();
+      } catch (err) {
+        setStatus(String(err?.message || err), "err");
+      }
+    };
+
+    if (btnLock) btnLock.onclick = async () => {
+      try {
+        if (!currentPeriodId) return;
+        const ok = confirm(`Lock payroll period ${currentPeriodId}? This should prevent changes.`);
+        if (!ok) return;
+        setStatus("Locking period…");
+        const res = await payrollLock(currentPeriodId);
+        if (!res || !res.ok) throw new Error(res?.error || "payroll_lock failed");
+        await refreshAll();
+      } catch (err) {
+        setStatus(String(err?.message || err), "err");
+      }
+    };
   }
 
-  async function lockPeriod(){
-    const { auth, token, deviceKey } = loadAuth();
-    if (!auth || !auth.ok || auth.role !== "admin") return deny("No active admin session.");
-    if (!token || !deviceKey) return deny("Missing admin token/device key in storage.");
-
-    const periodId = periodIdEl.textContent || "";
-    if (!periodId) return;
-
-    if (!confirm(`Lock pay period ${periodId}?\n\nThis should be done only after payout.`)) return;
-
-    setStatus("Locking period…");
-    try{
-      const txt = await post("payroll_lock", {}, token, deviceKey, periodId);
-      setDebug("Lock response: " + txt);
-      await refreshAll();
-    }catch(err){
-      setStatus("Lock failed:\n" + (err?.message || err), "err");
-    }
-  }
-
-  // Wire buttons
-  btnGenerate?.addEventListener("click", generate);
-  btnRefresh?.addEventListener("click", refreshAll);
-  btnLock?.addEventListener("click", lockPeriod);
-
-  // Boot
+  // Run after DOM ready
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", refreshAll);
+    document.addEventListener("DOMContentLoaded", () => boot().catch(err => setStatus(String(err?.message || err), "err")));
   } else {
-    refreshAll();
+    boot().catch(err => setStatus(String(err?.message || err), "err"));
   }
 })();
