@@ -1,17 +1,15 @@
 /* =========================================================
    ATS Payroll (Admin UI) — v2.1
-   - Uses unified Apps Script backend (JSONP)
-   - Fixes missing token by rehydrating from URL/hash
-   - Supports bookmark-safe token: /admin/payroll/#t=TOKEN
+   ✅ Reads token from sessionStorage OR localStorage (Option A bookmark safe)
 ========================================================= */
 
 (() => {
-  // ✅ SET THIS to your current Apps Script /exec
   const API_URL = "https://script.google.com/macros/s/AKfycbxZdZi2eojV04LBbXikTIrg60WKvX21BGijgpqLdBdwjPiJquC_GzBudMvXgcu0oMGd/exec";
 
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
   const AUTH_STORAGE  = "ats_admin_auth_v1";
   const TOKEN_STORAGE = "ats_admin_token_v1";
+  const TOKEN_LOCAL   = "ats_admin_token_local_v1";
 
   const pillWho = document.getElementById("pillWho");
   const statusBox = document.getElementById("statusBox");
@@ -57,31 +55,16 @@
     return key;
   }
 
-  function getTokenFromSession() {
-    try { return (sessionStorage.getItem(TOKEN_STORAGE) || "").trim(); } catch (e) { return ""; }
-  }
-
-  function getTokenFromUrlOrHash_() {
+  function getToken() {
     try {
-      const url = new URL(window.location.href);
-      const t1 = (url.searchParams.get("t") || "").trim();
-      if (t1) return t1;
-
-      const h = (url.hash || "").replace(/^#/, "");
-      const params = new URLSearchParams(h);
-      return (params.get("t") || "").trim();
-    } catch (e) { return ""; }
-  }
-
-  function ensureToken_() {
-    let t = getTokenFromSession();
-    if (t) return t;
-
-    t = getTokenFromUrlOrHash_();
-    if (t) {
-      try { sessionStorage.setItem(TOKEN_STORAGE, t); } catch (e) {}
-    }
-    return t;
+      const s = (sessionStorage.getItem(TOKEN_STORAGE) || "").trim();
+      if (s) return s;
+    } catch (e) {}
+    try {
+      const l = (localStorage.getItem(TOKEN_LOCAL) || "").trim();
+      if (l) return l;
+    } catch (e) {}
+    return "";
   }
 
   function loadSessionAuth() {
@@ -112,7 +95,6 @@
       .replaceAll("'", "&#039;");
   }
 
-  // JSONP helper
   function jsonp(url) {
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Math.random().toString(36).slice(2);
@@ -139,7 +121,7 @@
   }
 
   function secureUrl(action, extraQs = "") {
-    const t = ensureToken_();
+    const t = getToken();
     const d = getDeviceKey();
     const base = `${API_URL}?action=${encodeURIComponent(action)}&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`;
     return extraQs ? (base + "&" + extraQs) : base;
@@ -150,7 +132,7 @@
   async function payrollSummary(periodId) { return jsonp(secureUrl("payroll_summary", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollGenerate(periodId){ return jsonp(secureUrl("payroll_generate", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollLock(periodId){ return jsonp(secureUrl("payroll_lock", `period_id=${encodeURIComponent(periodId)}`)); }
-  async function payrollPayouts(periodId){ return jsonp(secureUrl("payroll_payouts", `period_id=${encodeURIComponent(periodId)}`)); } // ✅ NEW
+  async function payrollPayouts(periodId){ return jsonp(secureUrl("payroll_payouts", `period_id=${encodeURIComponent(periodId)}`)); }
 
   function renderPeriod(p) {
     currentPeriodId = p?.periodId || "";
@@ -234,11 +216,6 @@
     if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_current failed");
     renderPeriod(cur.period);
 
-    if (!currentPeriodId) {
-      setStatus("No current period id returned.", "err");
-      return;
-    }
-
     setStatus("Loading summary…");
     const sum = await payrollSummary(currentPeriodId);
     if (!sum || !sum.ok) throw new Error(sum?.error || "payroll_summary failed");
@@ -264,13 +241,8 @@
       const address = prompt("Address (optional):", "");
       const notes = prompt("Notes (optional):", "");
 
-      const t = ensureToken_();
+      const t = getToken();
       const d = getDeviceKey();
-
-      if (!t) {
-        setStatus("Denied: missing token.", "err");
-        return;
-      }
 
       setStatus("Adding one-off job to Overrides…");
 
@@ -290,21 +262,18 @@
   async function boot() {
     setDebug(`API_URL: ${API_URL}`);
 
-    // ✅ must be admin
-    const authObj = loadSessionAuth();
-    if (!requireAdmin(authObj)) {
-      setStatus("Denied: admin access required.\n\nOpen this from the Admin Panel.", "err");
+    // If token missing, send back to Admin panel sign-in
+    const token = getToken();
+    if (!token) {
+      setStatus("Denied: missing token.\n\nOpen /admin/ and sign in.", "err");
       if (pillWho) pillWho.textContent = "Denied";
       return;
     }
-    setWho(authObj);
 
-    // ✅ ensure token exists (rehydrate from URL/hash)
-    const t = ensureToken_();
-    if (!t) {
-      setStatus("Denied: missing token.\n\nOpen from Admin Panel or use bookmark: /admin/#t=TOKEN", "err");
-      return;
-    }
+    const authObj = loadSessionAuth();
+    // If auth object missing (new tab, refresh, etc.), still allow—backend enforces admin + device binding.
+    if (requireAdmin(authObj)) setWho(authObj);
+    else if (pillWho) pillWho.textContent = "Admin";
 
     setStatus("Checking secure API…");
     const p = await ping();
@@ -316,7 +285,6 @@
 
     if (btnGenerate) btnGenerate.onclick = async () => {
       try {
-        if (!currentPeriodId) return;
         setStatus("Generating / rebuilding summary…");
         const res = await payrollGenerate(currentPeriodId);
         if (!res || !res.ok) throw new Error(res?.error || "payroll_generate failed");
@@ -328,7 +296,6 @@
 
     if (btnLock) btnLock.onclick = async () => {
       try {
-        if (!currentPeriodId) return;
         const ok = confirm(`Lock payroll period ${currentPeriodId}?`);
         if (!ok) return;
         setStatus("Locking period…");
@@ -344,7 +311,6 @@
 
     if (btnPayouts) btnPayouts.onclick = async () => {
       try {
-        if (!currentPeriodId) return;
         setStatus("Loading job breakdown…");
         const res = await payrollPayouts(currentPeriodId);
         if (!res || !res.ok) throw new Error(res?.error || "payroll_payouts failed");
