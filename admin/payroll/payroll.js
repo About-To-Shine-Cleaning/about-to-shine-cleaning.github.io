@@ -1,10 +1,11 @@
 /* =========================================================
-   ATS Payroll (Admin UI) — v2 (front-end)
+   ATS Payroll (Admin UI) — v2
    - Uses unified Apps Script backend (JSONP)
    - Uses token saved by admin.js: sessionStorage ats_admin_token_v1
 ========================================================= */
 
 (() => {
+  // ✅ SET THIS to your current Apps Script /exec
   const API_URL = "https://script.google.com/macros/s/AKfycbxZdZi2eojV04LBbXikTIrg60WKvX21BGijgpqLdBdwjPiJquC_GzBudMvXgcu0oMGd/exec";
 
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
@@ -24,12 +25,16 @@
   const btnGenerate = document.getElementById("btnGenerate");
   const btnRefresh = document.getElementById("btnRefresh");
   const btnLock = document.getElementById("btnLock");
+  const btnAddOverride = document.getElementById("btnAddOverride");
+  const btnPayouts = document.getElementById("btnPayouts");
 
   const summaryHint = document.getElementById("summaryHint");
   const summaryBody = document.getElementById("summaryBody");
 
-  // NEW button (we’ll add it to HTML below)
-  const btnAddOverride = document.getElementById("btnAddOverride");
+  const payoutCard = document.getElementById("payoutCard");
+  const payoutHint = document.getElementById("payoutHint");
+  const payoutBody = document.getElementById("payoutBody");
+  const payoutTotals = document.getElementById("payoutTotals");
 
   let currentPeriodId = "";
 
@@ -74,12 +79,13 @@
     pillWho.textContent = `${authObj.employeeId} • ${authObj.employeeName || authObj.employeeId}`;
   }
 
-  function removeTokenFromUrl() {
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("t");
-      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
-    } catch (e) {}
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   // JSONP helper
@@ -108,7 +114,6 @@
     });
   }
 
-  // --- secure query builder ---
   function secureUrl(action, extraQs = "") {
     const t = getTokenFromSession();
     const d = getDeviceKey();
@@ -117,11 +122,11 @@
   }
 
   async function ping() { return jsonp(`${API_URL}?action=ping`); }
-
   async function payrollCurrent() { return jsonp(secureUrl("payroll_current")); }
   async function payrollSummary(periodId) { return jsonp(secureUrl("payroll_summary", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollGenerate(periodId){ return jsonp(secureUrl("payroll_generate", `period_id=${encodeURIComponent(periodId)}`)); }
   async function payrollLock(periodId){ return jsonp(secureUrl("payroll_lock", `period_id=${encodeURIComponent(periodId)}`)); }
+  async function payrollPayouts(periodId){ return jsonp(secureUrl("payroll_payouts", `period_id=${encodeURIComponent(periodId)}`)); } // ✅ NEW
 
   function renderPeriod(p) {
     currentPeriodId = p?.periodId || "";
@@ -131,15 +136,6 @@
     if (periodPaydayEl) periodPaydayEl.textContent = p?.payday || "—";
     if (periodStatusEl) periodStatusEl.textContent = p?.status || "—";
     if (summaryHint) summaryHint.textContent = currentPeriodId ? `Showing summary for ${currentPeriodId}` : "—";
-  }
-
-  function escapeHtml(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
   }
 
   function renderSummary(rows) {
@@ -167,6 +163,48 @@
     }).join("");
   }
 
+  function renderPayouts(payouts) {
+    if (!payoutCard || !payoutBody || !payoutHint || !payoutTotals) return;
+
+    const employees = payouts?.employees || [];
+    const grandTotal = Number(payouts?.grandTotal || 0).toFixed(2);
+
+    if (!employees.length) {
+      payoutBody.innerHTML = `<tr><td colspan="4" style="color:#6b7280">No job lines found for this period.</td></tr>`;
+      payoutHint.textContent = currentPeriodId ? `Job lines for ${currentPeriodId}` : "—";
+      payoutTotals.textContent = `Grand Total: $${grandTotal}`;
+      payoutCard.classList.remove("hidden");
+      return;
+    }
+
+    // Flatten rows so it’s readable (employee + each job line)
+    const rows = [];
+    employees.forEach(emp => {
+      (emp.jobs || []).forEach(j => {
+        rows.push({
+          employee: emp.employeeName || emp.employeeId,
+          date: j.date || "",
+          job: j.jobName || "",
+          pay: Number(j.jobPay || 0).toFixed(2)
+        });
+      });
+    });
+
+    payoutBody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${escapeHtml(r.employee)}</td>
+        <td>${escapeHtml(r.date)}</td>
+        <td>${escapeHtml(r.job)}</td>
+        <td class="right">$${escapeHtml(r.pay)}</td>
+      </tr>
+    `).join("");
+
+    payoutHint.textContent = currentPeriodId ? `Job lines for ${currentPeriodId}` : "—";
+    payoutTotals.textContent = `Grand Total: $${grandTotal}`;
+    payoutCard.classList.remove("hidden");
+    payoutCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function refreshAll() {
     setStatus("Loading current pay period…");
     const cur = await payrollCurrent();
@@ -186,7 +224,6 @@
     setStatus("Ready ✅", "ok");
   }
 
-  // NEW: one-off override prompt + POST
   async function addOneOffJob() {
     try {
       const employeeId = prompt("Employee ID (e.g., E04):");
@@ -209,13 +246,12 @@
 
       setStatus("Adding one-off job to Overrides…");
 
-      const resp = await fetch(`${API_URL}?action=schedule_override_add&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`, {
+      await fetch(`${API_URL}?action=schedule_override_add&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ employeeId, date, jobName, jobPay, startTime, endTime, address, notes })
       });
 
-      // Apps Script returns OK text; no JSON needed.
       setStatus("One-off job added ✅", "ok");
       alert("Added. This will appear in Today/This Week once the schedule page reads Overrides.");
     } catch (err) {
@@ -269,6 +305,19 @@
     };
 
     if (btnAddOverride) btnAddOverride.onclick = () => addOneOffJob();
+
+    if (btnPayouts) btnPayouts.onclick = async () => {
+      try {
+        if (!currentPeriodId) return;
+        setStatus("Loading job breakdown…");
+        const res = await payrollPayouts(currentPeriodId);
+        if (!res || !res.ok) throw new Error(res?.error || "payroll_payouts failed");
+        renderPayouts(res.payouts);
+        setStatus("Ready ✅", "ok");
+      } catch (err) {
+        setStatus(String(err?.message || err), "err");
+      }
+    };
   }
 
   if (document.readyState === "loading") {
