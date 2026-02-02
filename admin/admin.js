@@ -9,7 +9,7 @@
 
 (() => {
   // ✅ NEW Apps Script URL (your message)
-  const API_URL = "https://script.google.com/macros/s/AKfycbyCCv30Q3l0Gg2zGs2sHD6a9jHm678QQKV_mdTm_GFnjR-xsmaYdDonmlBugX3TeHPiJA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
   // ✅ Estimator allowed admins (for now)
   const ESTIMATOR_ALLOWED = ["E01", "E04"];
