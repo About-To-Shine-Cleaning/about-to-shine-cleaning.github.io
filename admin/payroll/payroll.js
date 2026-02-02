@@ -1,7 +1,8 @@
 /* =========================================================
-   ATS Payroll (Admin UI) — v2
+   ATS Payroll (Admin UI) — v2.1
    - Uses unified Apps Script backend (JSONP)
-   - Uses token saved by admin.js: sessionStorage ats_admin_token_v1
+   - Fixes missing token by rehydrating from URL/hash
+   - Supports bookmark-safe token: /admin/payroll/#t=TOKEN
 ========================================================= */
 
 (() => {
@@ -60,6 +61,29 @@
     try { return (sessionStorage.getItem(TOKEN_STORAGE) || "").trim(); } catch (e) { return ""; }
   }
 
+  function getTokenFromUrlOrHash_() {
+    try {
+      const url = new URL(window.location.href);
+      const t1 = (url.searchParams.get("t") || "").trim();
+      if (t1) return t1;
+
+      const h = (url.hash || "").replace(/^#/, "");
+      const params = new URLSearchParams(h);
+      return (params.get("t") || "").trim();
+    } catch (e) { return ""; }
+  }
+
+  function ensureToken_() {
+    let t = getTokenFromSession();
+    if (t) return t;
+
+    t = getTokenFromUrlOrHash_();
+    if (t) {
+      try { sessionStorage.setItem(TOKEN_STORAGE, t); } catch (e) {}
+    }
+    return t;
+  }
+
   function loadSessionAuth() {
     try {
       const raw = sessionStorage.getItem(AUTH_STORAGE);
@@ -115,7 +139,7 @@
   }
 
   function secureUrl(action, extraQs = "") {
-    const t = getTokenFromSession();
+    const t = ensureToken_();
     const d = getDeviceKey();
     const base = `${API_URL}?action=${encodeURIComponent(action)}&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`;
     return extraQs ? (base + "&" + extraQs) : base;
@@ -177,7 +201,6 @@
       return;
     }
 
-    // Flatten rows so it’s readable (employee + each job line)
     const rows = [];
     employees.forEach(emp => {
       (emp.jobs || []).forEach(j => {
@@ -241,8 +264,13 @@
       const address = prompt("Address (optional):", "");
       const notes = prompt("Notes (optional):", "");
 
-      const t = getTokenFromSession();
+      const t = ensureToken_();
       const d = getDeviceKey();
+
+      if (!t) {
+        setStatus("Denied: missing token.", "err");
+        return;
+      }
 
       setStatus("Adding one-off job to Overrides…");
 
@@ -262,6 +290,7 @@
   async function boot() {
     setDebug(`API_URL: ${API_URL}`);
 
+    // ✅ must be admin
     const authObj = loadSessionAuth();
     if (!requireAdmin(authObj)) {
       setStatus("Denied: admin access required.\n\nOpen this from the Admin Panel.", "err");
@@ -269,6 +298,13 @@
       return;
     }
     setWho(authObj);
+
+    // ✅ ensure token exists (rehydrate from URL/hash)
+    const t = ensureToken_();
+    if (!t) {
+      setStatus("Denied: missing token.\n\nOpen from Admin Panel or use bookmark: /admin/#t=TOKEN", "err");
+      return;
+    }
 
     setStatus("Checking secure API…");
     const p = await ping();
