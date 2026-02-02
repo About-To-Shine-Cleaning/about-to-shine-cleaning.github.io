@@ -1,194 +1,125 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ATS Payroll</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="robots" content="noindex,nofollow,noarchive" />
-
   <style>
-    :root{
-      --purple:#5b2a86;
-      --blue:#2f7bdc;
-      --yellow:#FFD84D;
-      --ink:#111827;
-      --muted:#6b7280;
-      --card:#ffffff;
-      --border:#e5e7eb;
-      --bg:#f6f7fb;
-      --danger:#b91c1c;
-      --ok:#065f46;
-    }
-
-    *{box-sizing:border-box}
-    body{margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--ink)}
-    .letterhead{
-      background:linear-gradient(90deg,var(--purple),var(--blue));
-      color:#fff; padding:16px 18px 14px;
-      position:sticky; top:0; z-index:5;
-    }
-    .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
-    .brand{font-weight:900; font-size:18px}
-    .subtitle{opacity:.92; font-size:13px}
-    .line{height:4px; background:var(--yellow); margin-top:10px; border-radius:999px}
-    a.back{color:#fff; text-decoration:none; font-weight:900;}
-
-    .wrap{max-width:1100px; margin:0 auto; padding:14px}
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:14px;
-      margin:12px 0;
-      box-shadow:0 6px 18px rgba(0,0,0,.08);
-    }
-
-    .pill{
-      display:inline-flex; gap:8px; align-items:center;
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.16);
-      border:1px solid rgba(255,255,255,.22);
-      color:#fff; font-weight:900; font-size:12px;
-    }
-
-    .status{
-      white-space:pre-wrap;
-      color:#111827;
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-    }
-    .status.ok{border-color:#bbf7d0; background:#f0fdf4}
-    .status.err{border-color:#fecaca; background:#fef2f2; color:#b91c1c}
-
-    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:12px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-
-    .btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    button{
-      border:0; border-radius:12px; padding:10px 12px;
-      font-weight:900; cursor:pointer;
-    }
-    .primary{background:var(--purple); color:#fff}
-    .ghost{background:#fff; border:1px solid var(--border)}
-    .danger{background:#b91c1c; color:#fff}
-
-    .metaLine{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:13px}
-    .kv{display:flex; gap:8px; align-items:center}
-    .k{font-weight:900; color:#111827}
-
-    table{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px}
-    th, td{border-bottom:1px solid var(--border); padding:10px 8px; text-align:left; vertical-align:top}
-    th{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#0b1020;color:#e5e7eb}
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;margin-top:14px}
+    .btn{cursor:pointer;border:none;border-radius:14px;padding:12px 14px;background:#fbbf24;color:#111827;font-weight:700}
+    .btn.secondary{background:rgba(255,255,255,.10);color:#e5e7eb;border:1px solid rgba(255,255,255,.18)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .muted{color:#9ca3af}
+    .status{white-space:pre-wrap;padding:12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+    .status.ok{border-color:rgba(34,197,94,.6)}
+    .status.err{border-color:rgba(239,68,68,.6)}
+    table th, table td{border-bottom:1px solid rgba(255,255,255,.10)}
+    th{font-size:12px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+    td{font-size:14px}
     .right{text-align:right}
-    .small{font-size:12px; color:var(--muted); margin-top:8px; white-space:pre-wrap}
-
-    .split{display:grid; grid-template-columns:1fr; gap:12px}
+    .small{font-size:12px;color:#9ca3af}
     .hidden{display:none}
   </style>
 </head>
-
 <body>
-  <div class="letterhead">
-    <div class="row">
-      <div>
-        <div class="brand">About To Shine Cleaning</div>
-        <div class="subtitle">Payroll (Admin)</div>
-      </div>
-      <div class="row" style="gap:10px">
-        <a class="back" href="/admin/">← Admin</a>
-        <div class="pill" id="pillWho">Checking…</div>
-      </div>
-    </div>
-    <div class="line"></div>
-  </div>
-
   <div class="wrap">
-    <div class="card">
-      <div class="status" id="statusBox">Loading…</div>
-      <div class="small" id="debug"></div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h3 style="margin:0 0 8px;">Current Pay Period</h3>
-        <div class="metaLine">
-          <div class="kv"><span class="k">Period:</span> <span id="periodId">—</span></div>
-          <div class="kv"><span class="k">Start:</span> <span id="periodStart">—</span></div>
-          <div class="kv"><span class="k">End:</span> <span id="periodEnd">—</span></div>
-          <div class="kv"><span class="k">Payday:</span> <span id="periodPayday">—</span></div>
-          <div class="kv"><span class="k">Status:</span> <span id="periodStatus">—</span></div>
-        </div>
-
-        <div class="btnRow">
-          <button class="primary" id="btnGenerate">Generate / Rebuild Summary</button>
-          <button class="ghost" id="btnRefresh">Refresh</button>
-          <button class="ghost" id="btnAddOverride">Add One-Off Job</button>
-          <button class="ghost" id="btnPayouts">Job Breakdown</button>
-          <button class="danger" id="btnLock">Lock Period</button>
-        </div>
-
-        <div class="small">
-Pay period rule (locked for now):
-• Starts Friday
-• Ends Thursday
-• Payday Friday
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 8px;">What this calculates</h3>
-        <div class="small" style="margin-top:0">
-• Uses your Logs sheet
-• Counts jobs from Action = "Clock Out"
-• TotalPay = sum(Job Pay) for that period
-• Job Breakdown = every Clock Out line item (per employee)
-        </div>
-      </div>
+    <div class="top">
+      <div class="pill"><strong>ATS Payroll</strong> <span class="muted">Admin</span></div>
+      <div class="pill" id="pillWho">—</div>
     </div>
 
     <div class="card">
-      <h3 style="margin:0 0 8px;">Payroll Summary</h3>
-      <div class="small" id="summaryHint">—</div>
-      <div style="overflow:auto">
-        <table id="summaryTable">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="muted">Current Pay Period</div>
+          <div style="font-size:18px;font-weight:800" id="periodId">—</div>
+          <div class="small">
+            <span id="periodStart">—</span> → <span id="periodEnd">—</span> • Payday <span id="periodPayday">—</span> • <span id="periodStatus">—</span>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="btnRefresh">Refresh</button>
+          <button class="btn secondary" id="btnGenerate">Generate/Rebuild Summary</button>
+          <button class="btn secondary" id="btnLock">Lock Period</button>
+          <button class="btn secondary" id="btnAddOverride">Add One-Off Job</button>
+          <button class="btn secondary" id="btnPayouts">Job Breakdown</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="status" id="statusBox"></div>
+      <div class="small" id="debug" style="margin-top:10px"></div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0">Summary</h3>
+      <p class="muted" id="summaryHint">—</p>
+      <div style="overflow:auto; border-radius:14px; border:1px solid rgba(255,255,255,.18);">
+        <table style="width:100%; border-collapse:collapse; min-width:720px;">
           <thead>
             <tr>
-              <th>Employee</th>
-              <th class="right">Jobs Completed</th>
-              <th class="right">Total Pay</th>
-              <th class="right">Exceptions</th>
-              <th>Last Update</th>
+              <th style="text-align:left; padding:10px 12px;">Employee</th>
+              <th class="right" style="padding:10px 12px;">Jobs</th>
+              <th class="right" style="padding:10px 12px;">Total Pay</th>
+              <th class="right" style="padding:10px 12px;">Exceptions</th>
+              <th style="text-align:left; padding:10px 12px;">Last Update</th>
             </tr>
           </thead>
-          <tbody id="summaryBody">
-            <tr><td colspan="5" style="color:#6b7280">No data yet.</td></tr>
-          </tbody>
+          <tbody id="summaryBody"></tbody>
         </table>
       </div>
     </div>
 
-    <div class="card hidden" id="payoutCard">
-      <h3 style="margin:0 0 8px;">Job Breakdown</h3>
-      <div class="small" id="payoutHint">—</div>
-      <div style="overflow:auto">
-        <table>
+    <!-- ✅ PAYMENTS -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0">Payments</h3>
+      <p class="muted" id="paymentsHint">One line per employee for this period.</p>
+
+      <div style="overflow:auto; border-radius:14px; border:1px solid rgba(255,255,255,.18);">
+        <table style="width:100%; border-collapse:collapse; min-width:720px;">
           <thead>
             <tr>
-              <th>Employee</th>
-              <th>Date</th>
-              <th>Job</th>
-              <th class="right">Pay</th>
+              <th style="text-align:left; padding:10px 12px;">Employee</th>
+              <th style="text-align:left; padding:10px 12px;">Period</th>
+              <th style="text-align:right; padding:10px 12px;">Total</th>
+              <th style="text-align:left; padding:10px 12px;">Status</th>
+              <th style="text-align:right; padding:10px 12px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="small" style="margin-top:10px;" id="paymentsTotals"></div>
+    </div>
+
+    <!-- JOB BREAKDOWN -->
+    <div class="card hidden" id="payoutCard">
+      <h3 style="margin:0 0 8px 0">Job Breakdown</h3>
+      <p class="muted" id="payoutHint">—</p>
+      <div style="overflow:auto; border-radius:14px; border:1px solid rgba(255,255,255,.18);">
+        <table style="width:100%; border-collapse:collapse; min-width:720px;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:10px 12px;">Employee</th>
+              <th style="text-align:left; padding:10px 12px;">Date</th>
+              <th style="text-align:left; padding:10px 12px;">Job</th>
+              <th style="text-align:right; padding:10px 12px;">Pay</th>
             </tr>
           </thead>
           <tbody id="payoutBody"></tbody>
         </table>
       </div>
-      <div class="small" id="payoutTotals"></div>
+      <div class="small" style="margin-top:10px;" id="payoutTotals"></div>
     </div>
+
   </div>
 
-  <script src="/admin/payroll/payroll.js"></script>
+  <script src="./payroll.js"></script>
 </body>
 </html>
