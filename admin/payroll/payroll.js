@@ -5,15 +5,14 @@
    - Calls Apps Script via JSONP:
        GET  ?action=ping
        GET  ?action=auth&t=...&d=...
-       GET  ?action=payroll_current
+       GET  ?action=payroll_period
        GET  ?action=payroll_summary&period_id=...
-       GET  ?action=payroll_generate&period_id=...
+       GET  ?action=payroll_generate
        GET  ?action=payroll_lock&period_id=...
 ========================================================= */
 
 (() => {
-  // ✅ IMPORTANT: set this to the SAME unified Apps Script /exec you want Payroll to use
-  // (This should be the script that also supports admin auth.)
+  // ✅ unified Apps Script /exec
   const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
   // Must match admin.js
@@ -39,6 +38,7 @@
   const summaryBody = document.getElementById("summaryBody");
 
   let currentPeriodId = "";
+  let currentPeriod = null;
 
   function setStatus(msg, kind /* "ok" | "err" | "" */) {
     if (!statusBox) return;
@@ -132,17 +132,18 @@
     pillWho.textContent = `${authObj.employeeId} • ${authObj.employeeName || authObj.employeeId}`;
   }
 
-  // ---------- Payroll API calls ----------
-  async function payrollCurrent() {
-    return jsonp(`${API_URL}?action=payroll_current`);
+  // ---------- Payroll API calls (MATCHES BACKEND) ----------
+  async function payrollPeriod() {
+    return jsonp(`${API_URL}?action=payroll_period`);
   }
 
   async function payrollSummary(periodId) {
     return jsonp(`${API_URL}?action=payroll_summary&period_id=${encodeURIComponent(periodId)}`);
   }
 
-  async function payrollGenerate(periodId) {
-    return jsonp(`${API_URL}?action=payroll_generate&period_id=${encodeURIComponent(periodId)}`);
+  // Backend uses current period; period_id param is ignored (safe)
+  async function payrollGenerate() {
+    return jsonp(`${API_URL}?action=payroll_generate`);
   }
 
   async function payrollLock(periodId) {
@@ -151,13 +152,18 @@
 
   function renderPeriod(p) {
     if (!p) return;
+    currentPeriod = p;
     currentPeriodId = p.periodId || "";
 
     if (periodIdEl) periodIdEl.textContent = p.periodId || "—";
     if (periodStartEl) periodStartEl.textContent = p.startDate || "—";
     if (periodEndEl) periodEndEl.textContent = p.endDate || "—";
-    if (periodPaydayEl) periodPaydayEl.textContent = p.payday || "—";
-    if (periodStatusEl) periodStatusEl.textContent = p.status || "—";
+
+    // Backend gives paydayDate; if you later add payday in backend it still works
+    if (periodPaydayEl) periodPaydayEl.textContent = (p.paydayDate || p.payday || "—");
+
+    // Backend doesn't currently return status; default to Open unless you add it later
+    if (periodStatusEl) periodStatusEl.textContent = (p.status || "Open");
 
     if (summaryHint) {
       summaryHint.textContent = currentPeriodId
@@ -204,8 +210,8 @@
 
   async function refreshAll() {
     setStatus("Loading current pay period…");
-    const cur = await payrollCurrent();
-    if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_current failed");
+    const cur = await payrollPeriod();
+    if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_period failed");
 
     renderPeriod(cur.period);
 
@@ -277,13 +283,13 @@
     await refreshAll();
 
     // Buttons
-    if (btnRefresh) btnRefresh.onclick = () => refreshAll().catch(err => setStatus(String(err?.message || err), "err"));
+    if (btnRefresh) btnRefresh.onclick = () =>
+      refreshAll().catch(err => setStatus(String(err?.message || err), "err"));
 
     if (btnGenerate) btnGenerate.onclick = async () => {
       try {
-        if (!currentPeriodId) return;
         setStatus("Generating / rebuilding summary…");
-        const res = await payrollGenerate(currentPeriodId);
+        const res = await payrollGenerate();
         if (!res || !res.ok) throw new Error(res?.error || "payroll_generate failed");
         await refreshAll();
       } catch (err) {
@@ -294,7 +300,7 @@
     if (btnLock) btnLock.onclick = async () => {
       try {
         if (!currentPeriodId) return;
-        const ok = confirm(`Lock payroll period ${currentPeriodId}? This should prevent changes.`);
+        const ok = confirm(`Lock payroll period ${currentPeriodId}?`);
         if (!ok) return;
         setStatus("Locking period…");
         const res = await payrollLock(currentPeriodId);
@@ -306,9 +312,10 @@
     };
   }
 
-  // Run after DOM ready
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => boot().catch(err => setStatus(String(err?.message || err), "err")));
+    document.addEventListener("DOMContentLoaded", () =>
+      boot().catch(err => setStatus(String(err?.message || err), "err"))
+    );
   } else {
     boot().catch(err => setStatus(String(err?.message || err), "err"));
   }
