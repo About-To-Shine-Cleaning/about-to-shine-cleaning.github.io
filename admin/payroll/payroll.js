@@ -14,7 +14,7 @@
 (() => {
   // ✅ IMPORTANT: set this to the SAME unified Apps Script /exec you want Payroll to use
   // (This should be the script that also supports admin auth.)
-  const API_URL = "https://script.google.com/macros/s/AKfycbyCCv30Q3l0Gg2zGs2sHD6a9jHm678QQKV_mdTm_GFnjR-xsmaYdDonmlBugX3TeHPiJA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
   // Must match admin.js
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
