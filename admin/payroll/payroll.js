@@ -1,25 +1,16 @@
 /* =========================================================
    ATS Payroll (Admin UI) — v2 (front-end)
-   - Requires admin auth (sessionStorage from /admin)
-   - Fallback: accepts ?t=TOKEN to auth directly (device bound)
-   - Calls Apps Script via JSONP:
-       GET  ?action=ping
-       GET  ?action=auth&t=...&d=...
-       GET  ?action=payroll_period
-       GET  ?action=payroll_summary&period_id=...
-       GET  ?action=payroll_generate
-       GET  ?action=payroll_lock&period_id=...
+   - Uses unified Apps Script backend (JSONP)
+   - Uses token saved by admin.js: sessionStorage ats_admin_token_v1
 ========================================================= */
 
 (() => {
-  // ✅ unified Apps Script /exec
   const API_URL = "https://script.google.com/macros/s/AKfycbzJKyZ7MVor41kVnpdM1dizHNFi42IwH_L5J_3liLc3E8UXnNo8B0Z2Q0AQOIWSizBp/exec";
 
-  // Must match admin.js
   const DEVICE_KEY_STORAGE = "ats_device_key_v1";
-  const AUTH_STORAGE = "ats_admin_auth_v1"; // sessionStorage
+  const AUTH_STORAGE  = "ats_admin_auth_v1";
+  const TOKEN_STORAGE = "ats_admin_token_v1";
 
-  // Elements
   const pillWho = document.getElementById("pillWho");
   const statusBox = document.getElementById("statusBox");
   const debugEl = document.getElementById("debug");
@@ -37,20 +28,19 @@
   const summaryHint = document.getElementById("summaryHint");
   const summaryBody = document.getElementById("summaryBody");
 
-  let currentPeriodId = "";
-  let currentPeriod = null;
+  // NEW button (we’ll add it to HTML below)
+  const btnAddOverride = document.getElementById("btnAddOverride");
 
-  function setStatus(msg, kind /* "ok" | "err" | "" */) {
+  let currentPeriodId = "";
+
+  function setStatus(msg, kind) {
     if (!statusBox) return;
     statusBox.classList.remove("ok", "err");
     if (kind === "ok") statusBox.classList.add("ok");
     if (kind === "err") statusBox.classList.add("err");
     statusBox.textContent = msg || "";
   }
-
-  function setDebug(msg) {
-    if (debugEl) debugEl.textContent = msg || "";
-  }
+  function setDebug(msg) { if (debugEl) debugEl.textContent = msg || ""; }
 
   function getDeviceKey() {
     let key = localStorage.getItem(DEVICE_KEY_STORAGE);
@@ -59,6 +49,29 @@
       localStorage.setItem(DEVICE_KEY_STORAGE, key);
     }
     return key;
+  }
+
+  function getTokenFromSession() {
+    try { return (sessionStorage.getItem(TOKEN_STORAGE) || "").trim(); } catch (e) { return ""; }
+  }
+
+  function loadSessionAuth() {
+    try {
+      const raw = sessionStorage.getItem(AUTH_STORAGE);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (obj && obj.ok && obj.employeeId && obj.role) return obj;
+    } catch (e) {}
+    return null;
+  }
+
+  function requireAdmin(authObj) {
+    return !!(authObj && authObj.ok && String(authObj.role||"").toLowerCase() === "admin");
+  }
+
+  function setWho(authObj) {
+    if (!pillWho) return;
+    pillWho.textContent = `${authObj.employeeId} • ${authObj.employeeName || authObj.employeeId}`;
   }
 
   function removeTokenFromUrl() {
@@ -95,92 +108,47 @@
     });
   }
 
-  async function ping() {
-    return jsonp(`${API_URL}?action=ping`);
+  // --- secure query builder ---
+  function secureUrl(action, extraQs = "") {
+    const t = getTokenFromSession();
+    const d = getDeviceKey();
+    const base = `${API_URL}?action=${encodeURIComponent(action)}&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`;
+    return extraQs ? (base + "&" + extraQs) : base;
   }
 
-  async function authWithToken(token) {
-    const deviceKey = getDeviceKey();
-    return jsonp(
-      `${API_URL}?action=auth` +
-      `&t=${encodeURIComponent(token)}` +
-      `&d=${encodeURIComponent(deviceKey)}`
-    );
-  }
+  async function ping() { return jsonp(`${API_URL}?action=ping`); }
 
-  function loadSessionAuth() {
-    try {
-      const raw = sessionStorage.getItem(AUTH_STORAGE);
-      if (!raw) return null;
-      const obj = JSON.parse(raw);
-      if (obj && obj.ok && obj.employeeId && obj.role) return obj;
-    } catch (e) {}
-    return null;
-  }
-
-  function saveSessionAuth(obj) {
-    try { sessionStorage.setItem(AUTH_STORAGE, JSON.stringify(obj)); } catch (e) {}
-  }
-
-  function requireAdmin(authObj) {
-    if (!authObj || !authObj.ok) return false;
-    return String(authObj.role || "").toLowerCase() === "admin";
-  }
-
-  function setWho(authObj) {
-    if (!pillWho) return;
-    pillWho.textContent = `${authObj.employeeId} • ${authObj.employeeName || authObj.employeeId}`;
-  }
-
-  // ---------- Payroll API calls (MATCHES BACKEND) ----------
-  async function payrollPeriod() {
-    return jsonp(`${API_URL}?action=payroll_period`);
-  }
-
-  async function payrollSummary(periodId) {
-    return jsonp(`${API_URL}?action=payroll_summary&period_id=${encodeURIComponent(periodId)}`);
-  }
-
-  // Backend uses current period; period_id param is ignored (safe)
-  async function payrollGenerate() {
-    return jsonp(`${API_URL}?action=payroll_generate`);
-  }
-
-  async function payrollLock(periodId) {
-    return jsonp(`${API_URL}?action=payroll_lock&period_id=${encodeURIComponent(periodId)}`);
-  }
+  async function payrollCurrent() { return jsonp(secureUrl("payroll_current")); }
+  async function payrollSummary(periodId) { return jsonp(secureUrl("payroll_summary", `period_id=${encodeURIComponent(periodId)}`)); }
+  async function payrollGenerate(periodId){ return jsonp(secureUrl("payroll_generate", `period_id=${encodeURIComponent(periodId)}`)); }
+  async function payrollLock(periodId){ return jsonp(secureUrl("payroll_lock", `period_id=${encodeURIComponent(periodId)}`)); }
 
   function renderPeriod(p) {
-    if (!p) return;
-    currentPeriod = p;
-    currentPeriodId = p.periodId || "";
+    currentPeriodId = p?.periodId || "";
+    if (periodIdEl) periodIdEl.textContent = p?.periodId || "—";
+    if (periodStartEl) periodStartEl.textContent = p?.startDate || "—";
+    if (periodEndEl) periodEndEl.textContent = p?.endDate || "—";
+    if (periodPaydayEl) periodPaydayEl.textContent = p?.payday || "—";
+    if (periodStatusEl) periodStatusEl.textContent = p?.status || "—";
+    if (summaryHint) summaryHint.textContent = currentPeriodId ? `Showing summary for ${currentPeriodId}` : "—";
+  }
 
-    if (periodIdEl) periodIdEl.textContent = p.periodId || "—";
-    if (periodStartEl) periodStartEl.textContent = p.startDate || "—";
-    if (periodEndEl) periodEndEl.textContent = p.endDate || "—";
-
-    // Backend gives paydayDate; if you later add payday in backend it still works
-    if (periodPaydayEl) periodPaydayEl.textContent = (p.paydayDate || p.payday || "—");
-
-    // Backend doesn't currently return status; default to Open unless you add it later
-    if (periodStatusEl) periodStatusEl.textContent = (p.status || "Open");
-
-    if (summaryHint) {
-      summaryHint.textContent = currentPeriodId
-        ? `Showing summary for ${currentPeriodId}`
-        : "—";
-    }
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   function renderSummary(rows) {
     if (!summaryBody) return;
-
     const data = Array.isArray(rows) ? rows : [];
     if (!data.length) {
       summaryBody.innerHTML = `<tr><td colspan="5" style="color:#6b7280">No data yet.</td></tr>`;
       return;
     }
-
     summaryBody.innerHTML = data.map(r => {
       const emp = (r.employeeName || r.employeeId || "—");
       const jobs = Number(r.jobsCompleted || 0);
@@ -199,20 +167,10 @@
     }).join("");
   }
 
-  function escapeHtml(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
   async function refreshAll() {
     setStatus("Loading current pay period…");
-    const cur = await payrollPeriod();
-    if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_period failed");
-
+    const cur = await payrollCurrent();
+    if (!cur || !cur.ok) throw new Error(cur?.error || "payroll_current failed");
     renderPeriod(cur.period);
 
     if (!currentPeriodId) {
@@ -228,68 +186,67 @@
     setStatus("Ready ✅", "ok");
   }
 
-  // ---------- Boot ----------
+  // NEW: one-off override prompt + POST
+  async function addOneOffJob() {
+    try {
+      const employeeId = prompt("Employee ID (e.g., E04):");
+      if (!employeeId) return;
+
+      const date = prompt("Date (YYYY-MM-DD):");
+      if (!date) return;
+
+      const jobName = prompt("Job Name:");
+      if (!jobName) return;
+
+      const jobPay = prompt("Job Pay (number):", "");
+      const startTime = prompt("Start Time (HH:MM, optional):", "");
+      const endTime = prompt("End Time (HH:MM, optional):", "");
+      const address = prompt("Address (optional):", "");
+      const notes = prompt("Notes (optional):", "");
+
+      const t = getTokenFromSession();
+      const d = getDeviceKey();
+
+      setStatus("Adding one-off job to Overrides…");
+
+      const resp = await fetch(`${API_URL}?action=schedule_override_add&t=${encodeURIComponent(t)}&d=${encodeURIComponent(d)}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ employeeId, date, jobName, jobPay, startTime, endTime, address, notes })
+      });
+
+      // Apps Script returns OK text; no JSON needed.
+      setStatus("One-off job added ✅", "ok");
+      alert("Added. This will appear in Today/This Week once the schedule page reads Overrides.");
+    } catch (err) {
+      setStatus(String(err?.message || err), "err");
+    }
+  }
+
   async function boot() {
     setDebug(`API_URL: ${API_URL}`);
 
-    // 1) If we already have a session from /admin, use it
-    let authObj = loadSessionAuth();
-
-    // 2) If not, but URL has ?t=TOKEN, try to auth here too
-    if (!authObj) {
-      const url = new URL(window.location.href);
-      const token = url.searchParams.get("t") || "";
-      if (token) {
-        setStatus("Authorizing…");
-        const res = await authWithToken(token);
-
-        if (!res || !res.ok) {
-          setStatus(`Denied: ${res?.error || "unauthorized"}`, "err");
-          return;
-        }
-
-        authObj = {
-          ok: true,
-          employeeId: res.employeeId,
-          employeeName: res.employeeName,
-          role: res.role,
-          authedAt: new Date().toISOString(),
-        };
-
-        saveSessionAuth(authObj);
-        removeTokenFromUrl();
-      }
-    }
-
-    // 3) Must be admin
+    const authObj = loadSessionAuth();
     if (!requireAdmin(authObj)) {
-      setStatus(
-        "Denied: admin access required.\n\n" +
-        "Open this from the Admin Panel OR use an NFC token link.",
-        "err"
-      );
+      setStatus("Denied: admin access required.\n\nOpen this from the Admin Panel.", "err");
       if (pillWho) pillWho.textContent = "Denied";
       return;
     }
-
     setWho(authObj);
 
-    // 4) Validate API is reachable
     setStatus("Checking secure API…");
     const p = await ping();
     if (!p || !p.ok) throw new Error("Ping did not return ok");
 
-    // 5) Load payroll
     await refreshAll();
 
-    // Buttons
-    if (btnRefresh) btnRefresh.onclick = () =>
-      refreshAll().catch(err => setStatus(String(err?.message || err), "err"));
+    if (btnRefresh) btnRefresh.onclick = () => refreshAll().catch(err => setStatus(String(err?.message || err), "err"));
 
     if (btnGenerate) btnGenerate.onclick = async () => {
       try {
+        if (!currentPeriodId) return;
         setStatus("Generating / rebuilding summary…");
-        const res = await payrollGenerate();
+        const res = await payrollGenerate(currentPeriodId);
         if (!res || !res.ok) throw new Error(res?.error || "payroll_generate failed");
         await refreshAll();
       } catch (err) {
@@ -310,12 +267,12 @@
         setStatus(String(err?.message || err), "err");
       }
     };
+
+    if (btnAddOverride) btnAddOverride.onclick = () => addOneOffJob();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () =>
-      boot().catch(err => setStatus(String(err?.message || err), "err"))
-    );
+    document.addEventListener("DOMContentLoaded", () => boot().catch(err => setStatus(String(err?.message || err), "err")));
   } else {
     boot().catch(err => setStatus(String(err?.message || err), "err"));
   }
