@@ -209,3 +209,26 @@ footer p{
   background: var(--admin-accent) !important;
   color: #111 !important;
 }
+.sticky-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  background: linear-gradient(135deg, #3a1c8a, #1b4fbf);
+  border-top: 3px solid #FFD700;
+  z-index: 999;
+}
+
+.call-btn,
+.text-btn {
+  flex: 1;
+  padding: 16px 0;
+  font-weight: 800;
+  text-align: center;
+  background: transparent;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
