@@ -1,4 +1,6 @@
-/* RESET */
+/* =================================================
+   RESET / SAFETY
+================================================= */
 *,
 *::before,
 *::after {
@@ -11,36 +13,73 @@ html, body {
   margin: 0;
 }
 
-/* BRAND */
+/* =================================================
+   BRAND VARIABLES
+================================================= */
 :root {
   --brand-yellow: #FFD700;
   --brand-black: #000;
   --text-dark: #333;
-  --admin-bg1: #2b1e7a;
-  --admin-bg2: #1b4fbf;
+
+  /* DEEPER PURPLE THEME */
+  --admin-purple-1: #4b1fa3;  /* richer purple */
+  --admin-purple-2: #2f1470;  /* deeper purple */
 }
 
-/* BODY */
+/* =================================================
+   BASE TYPOGRAPHY
+================================================= */
 body {
   font-family: Arial, sans-serif;
   font-size: 16px;
   line-height: 1.65;
   color: var(--text-dark);
-  background: #fff;
+  background: #ffffff;
   padding-bottom: 90px;
 }
 
-/* LAYOUT */
+h1 {
+  font-size: 2.4rem;
+  margin: 0 0 16px;
+  color: var(--brand-black);
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin: 0 0 14px;
+  color: var(--brand-black);
+}
+
+p {
+  max-width: 68ch;
+  margin: 0 0 16px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =================================================
+   LAYOUT
+================================================= */
 .page-container {
   max-width: 1100px;
   margin: 0 auto;
   padding: 40px 20px;
 }
 
-/* HEADER */
+/* =================================================
+   HEADER (MORE PURPLE)
+================================================= */
 .site-header {
-  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2));
-  border-bottom: 3px solid var(--brand-yellow);
+  background: linear-gradient(
+    135deg,
+    var(--admin-purple-1),
+    var(--admin-purple-2)
+  );
+  border-bottom: 5px solid var(--brand-yellow); /* thicker yellow */
+  position: relative;
 }
 
 .header-inner {
@@ -56,6 +95,7 @@ body {
   height: 60px;
 }
 
+/* Nav links */
 .main-nav {
   display: flex;
   gap: 18px;
@@ -63,32 +103,62 @@ body {
 
 .main-nav a {
   font-weight: 600;
-  color: #fff;
+  color: #ffffff;
 }
 
 .main-nav a.cta {
   background: var(--brand-yellow);
   color: #111;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 14px;
   font-weight: 800;
 }
 
-/* FOOTER */
-footer {
-  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2));
-  border-top: 3px solid var(--brand-yellow);
-  color: #fff;
-  text-align: center;
+/* Hamburger */
+.nav-toggle {
+  display: none;
+  font-size: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
 }
 
-.footer-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 40px 20px 20px;
+/* Mobile nav */
+@media (max-width: 900px) {
+  .nav-toggle {
+    display: block;
+  }
+
+  .main-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(
+      135deg,
+      var(--admin-purple-1),
+      var(--admin-purple-2)
+    );
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 5px solid var(--brand-yellow);
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+
+  .main-nav a {
+    padding: 12px 0;
+  }
 }
 
-/* BUTTON */
+/* =================================================
+   BUTTONS
+================================================= */
 .button {
   display: inline-block;
   background: var(--brand-black);
@@ -98,137 +168,112 @@ footer {
   font-weight: bold;
 }
 
-/* STICKY BAR */
-.sticky-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+/* =================================================
+   QUOTE FORM (UNCHANGED)
+================================================= */
+.form-wrapper {
   display: flex;
-  z-index: 999;
+  justify-content: center;
 }
 
-.call-btn,
-.text-dropup {
-  flex: 1;
-  text-align: center;
-}
-
-.call-btn {
-  background: var(--brand-yellow);
-  color: var(--brand-black);
-  font-weight: 700;
-  padding: 16px 0;
-}
-
-.text-btn {
+.quote-form {
+  max-width: 860px;
   width: 100%;
-  background: var(--brand-yellow);
-  color: var(--brand-black);
+  padding: 40px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 26px 64px;
+}
+
+.quote-form input,
+.quote-form select,
+.quote-form textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.quote-form button {
+  grid-column: 1 / -1;
+  background: var(--brand-black);
+  color: var(--brand-yellow);
+  padding: 12px 22px;
   border: none;
-  font-size: 17px;
-  font-weight: 700;
-  padding: 16px 0;
+  border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
 }
+
 /* =================================================
-   ADMIN BRAND OVERRIDES (SAFE THEME LAYER)
-   Paste at bottom of style.css
+   FOOTER (MORE PURPLE)
 ================================================= */
-
-:root{
-  /* More purple like your sun image */
-  --admin-bg1: #3a1c8a;   /* rich purple */
-  --admin-bg2: #1b4fbf;   /* blue */
-  --admin-accent: var(--brand-yellow);
+footer {
+  background: linear-gradient(
+    135deg,
+    var(--admin-purple-1),
+    var(--admin-purple-2)
+  );
+  color: #ffffff;
+  text-align: center;
+  border-top: 5px solid var(--brand-yellow); /* thicker yellow */
 }
 
-/* Header gradient + thin yellow divider */
-.site-header{
-  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
-  border-bottom: 3px solid var(--admin-accent) !important;
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px 20px;
 }
 
-/* Nav colors on gradient */
-.main-nav a{
-  color: #fff !important;
-  text-shadow: 0 1px 0 rgba(0,0,0,.15);
+footer p {
+  margin-top: 20px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
 }
 
-.main-nav a.cta{
-  background: var(--admin-accent) !important;
-  color: #111 !important;
-  border-radius: 12px !important;
-}
-
-/* Hamburger button visible on gradient */
-.nav-toggle{
-  color: #fff !important;
-}
-
-/* Mobile dropdown matches header */
-@media (max-width: 900px){
-  .main-nav{
-    background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
-    border-bottom: 3px solid var(--admin-accent) !important;
-  }
-}
-
-/* Keep page body white */
-body{
-  background: #fff !important;
-}
-
-/* Footer gradient + thin yellow divider */
-footer{
-  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
-  color: #fff !important;
-  border-top: 3px solid var(--admin-accent) !important;
-}
-
-footer p{
-  color: rgba(255,255,255,.9) !important;
-}
-
-/* Sticky bar: make it match admin (not yellow) */
-.sticky-bar{
-  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
-  border-top: 3px solid var(--admin-accent) !important;
-}
-
-.call-btn,
-.text-btn,
-.text-direct{
-  background: transparent !important;
-  color: #fff !important;
-  font-weight: 800 !important;
-}
-
-/* If you keep the dropup menu, make it clean */
-.dropup-menu a:hover{
-  background: var(--admin-accent) !important;
-  color: #111 !important;
-}
+/* =================================================
+   STICKY BAR (MATCH PURPLE)
+================================================= */
 .sticky-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   display: flex;
-  background: linear-gradient(135deg, #3a1c8a, #1b4fbf);
-  border-top: 3px solid #FFD700;
   z-index: 999;
+  background: linear-gradient(
+    135deg,
+    var(--admin-purple-1),
+    var(--admin-purple-2)
+  );
+  border-top: 5px solid var(--brand-yellow);
 }
 
 .call-btn,
 .text-btn {
   flex: 1;
+  text-align: center;
   padding: 16px 0;
   font-weight: 800;
-  text-align: center;
+  color: #ffffff;
   background: transparent;
-  color: #fff;
   border: none;
   cursor: pointer;
 }
 
+@media (min-width: 769px) {
+  .sticky-bar {
+    max-width: 1100px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 12px 12px 0 0;
+  }
+}
