@@ -131,3 +131,81 @@ footer {
   padding: 16px 0;
   cursor: pointer;
 }
+/* =================================================
+   ADMIN BRAND OVERRIDES (SAFE THEME LAYER)
+   Paste at bottom of style.css
+================================================= */
+
+:root{
+  /* More purple like your sun image */
+  --admin-bg1: #3a1c8a;   /* rich purple */
+  --admin-bg2: #1b4fbf;   /* blue */
+  --admin-accent: var(--brand-yellow);
+}
+
+/* Header gradient + thin yellow divider */
+.site-header{
+  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
+  border-bottom: 3px solid var(--admin-accent) !important;
+}
+
+/* Nav colors on gradient */
+.main-nav a{
+  color: #fff !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.15);
+}
+
+.main-nav a.cta{
+  background: var(--admin-accent) !important;
+  color: #111 !important;
+  border-radius: 12px !important;
+}
+
+/* Hamburger button visible on gradient */
+.nav-toggle{
+  color: #fff !important;
+}
+
+/* Mobile dropdown matches header */
+@media (max-width: 900px){
+  .main-nav{
+    background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
+    border-bottom: 3px solid var(--admin-accent) !important;
+  }
+}
+
+/* Keep page body white */
+body{
+  background: #fff !important;
+}
+
+/* Footer gradient + thin yellow divider */
+footer{
+  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
+  color: #fff !important;
+  border-top: 3px solid var(--admin-accent) !important;
+}
+
+footer p{
+  color: rgba(255,255,255,.9) !important;
+}
+
+/* Sticky bar: make it match admin (not yellow) */
+.sticky-bar{
+  background: linear-gradient(135deg, var(--admin-bg1), var(--admin-bg2)) !important;
+  border-top: 3px solid var(--admin-accent) !important;
+}
+
+.call-btn,
+.text-btn,
+.text-direct{
+  background: transparent !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+
+/* If you keep the dropup menu, make it clean */
+.dropup-menu a:hover{
+  background: var(--admin-accent) !important;
+  color: #111 !important;
+}
