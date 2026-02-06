@@ -21,9 +21,8 @@ html, body {
   --brand-black: #000;
   --text-dark: #333;
 
-  /* DEEPER PURPLE THEME */
-  --admin-purple-1: #4b1fa3;  /* richer purple */
-  --admin-purple-2: #2f1470;  /* deeper purple */
+  /* TRUE PURPLE (no blue) */
+  --ats-purple: #5A189A;
 }
 
 /* =================================================
@@ -35,7 +34,7 @@ body {
   line-height: 1.65;
   color: var(--text-dark);
   background: #ffffff;
-  padding-bottom: 90px;
+  padding-bottom: 90px; /* space for sticky bar */
 }
 
 h1 {
@@ -55,9 +54,24 @@ p {
   margin: 0 0 16px;
 }
 
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Mobile type scaling */
+@media (max-width: 768px) {
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.5rem; }
+  p  { font-size: 0.95rem; }
 }
 
 /* =================================================
@@ -69,16 +83,18 @@ a {
   padding: 40px 20px;
 }
 
+section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
 /* =================================================
-   HEADER (MORE PURPLE)
+   HEADER / NAV (PURPLE + YELLOW DIVIDER)
 ================================================= */
 .site-header {
-  background: linear-gradient(
-    135deg,
-    var(--admin-purple-1),
-    var(--admin-purple-2)
-  );
-  border-bottom: 5px solid var(--brand-yellow); /* thicker yellow */
+  background: var(--ats-purple);
+  border-bottom: 5px solid var(--brand-yellow); /* slightly thicker yellow */
   position: relative;
 }
 
@@ -110,7 +126,7 @@ a {
   background: var(--brand-yellow);
   color: #111;
   padding: 8px 14px;
-  border-radius: 14px;
+  border-radius: 12px;
   font-weight: 800;
 }
 
@@ -126,6 +142,10 @@ a {
 
 /* Mobile nav */
 @media (max-width: 900px) {
+  .logo img {
+    height: 48px;
+  }
+
   .nav-toggle {
     display: block;
   }
@@ -136,11 +156,7 @@ a {
     top: 100%;
     left: 0;
     width: 100%;
-    background: linear-gradient(
-      135deg,
-      var(--admin-purple-1),
-      var(--admin-purple-2)
-    );
+    background: var(--ats-purple);
     flex-direction: column;
     align-items: center;
     padding: 20px 0;
@@ -169,7 +185,7 @@ a {
 }
 
 /* =================================================
-   QUOTE FORM (UNCHANGED)
+   QUOTE FORM
 ================================================= */
 .form-wrapper {
   display: flex;
@@ -183,9 +199,14 @@ a {
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 26px 64px;
+}
+
+.quote-form label {
+  font-weight: 600;
 }
 
 .quote-form input,
@@ -196,6 +217,10 @@ a {
   padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+
+.quote-form textarea {
+  min-height: 120px;
 }
 
 .full-width {
@@ -213,24 +238,66 @@ a {
   cursor: pointer;
 }
 
+/* Mobile form */
+@media (max-width: 700px) {
+  .quote-form {
+    grid-template-columns: 1fr;
+    padding: 24px 18px;
+  }
+
+  .quote-form button {
+    width: 100%;
+  }
+}
+
 /* =================================================
-   FOOTER (MORE PURPLE)
+   GALLERY
+================================================= */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.gallery-grid img {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+/* =================================================
+   MAP
+================================================= */
+.map-section {
+  max-width: 1100px;
+  margin: 40px auto 0;
+  padding: 0 20px;
+}
+
+.map-section iframe {
+  width: 100%;
+  height: 280px;
+  border-radius: 12px;
+  border: 0;
+}
+
+/* =================================================
+   FOOTER (PURPLE + YELLOW DIVIDER)
 ================================================= */
 footer {
-  background: linear-gradient(
-    135deg,
-    var(--admin-purple-1),
-    var(--admin-purple-2)
-  );
+  background: var(--ats-purple);
   color: #ffffff;
   text-align: center;
-  border-top: 5px solid var(--brand-yellow); /* thicker yellow */
+  border-top: 5px solid var(--brand-yellow); /* slightly thicker yellow */
 }
 
 .footer-inner {
   max-width: 1100px;
   margin: 0 auto;
   padding: 40px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 footer p {
@@ -240,7 +307,7 @@ footer p {
 }
 
 /* =================================================
-   STICKY BAR (MATCH PURPLE)
+   STICKY BAR (PURPLE, NO DROPUP)
 ================================================= */
 .sticky-bar {
   position: fixed;
@@ -249,11 +316,8 @@ footer p {
   width: 100%;
   display: flex;
   z-index: 999;
-  background: linear-gradient(
-    135deg,
-    var(--admin-purple-1),
-    var(--admin-purple-2)
-  );
+
+  background: var(--ats-purple);
   border-top: 5px solid var(--brand-yellow);
 }
 
@@ -269,6 +333,7 @@ footer p {
   cursor: pointer;
 }
 
+/* Keep your desktop centering */
 @media (min-width: 769px) {
   .sticky-bar {
     max-width: 1100px;
@@ -276,4 +341,11 @@ footer p {
     transform: translateX(-50%);
     border-radius: 12px 12px 0 0;
   }
+}
+
+/* =================================================
+   PAGE SPACING FIX (PREVENT OVERLAP)
+================================================= */
+body {
+  padding-bottom: 80px;
 }
