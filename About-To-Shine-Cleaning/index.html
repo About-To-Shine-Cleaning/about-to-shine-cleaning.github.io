@@ -1,19 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta http-equiv="refresh" content="0; url=/index.html" />
-  <link rel="canonical" href="/index.html" />
-
+  <title>QR Redirect</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:30px}
+    .box{padding:18px;border:3px solid #000;background:#fff}
+  </style>
   <script>
-    window.location.replace("/index.html");
+    setTimeout(() => location.replace("/index.html"), 1000);
   </script>
-
-  <title>Redirecting…</title>
 </head>
 <body>
-  Redirecting…
+  <div class="box">
+    ✅ QR PATH HIT: <b>/About-To-Shine-Cleaning/index.html</b><br><br>
+    Redirecting to <b>/index.html</b> in 1 second…
+  </div>
 </body>
 </html>
