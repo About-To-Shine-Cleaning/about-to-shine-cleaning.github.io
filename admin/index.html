@@ -1,35 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="/admin/admin-brand.css">
-
   <meta charset="UTF-8" />
   <title>ATS Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
 
+  <!-- ✅ Shared Admin Brand (ONE TIME) -->
+  <link rel="stylesheet" href="/admin/admin-brand.css" />
+
+  <!-- ✅ Favicon (must be INSIDE head) -->
+  <link rel="icon" type="image/png" href="/assets/images/logo-v2.png" />
+  <link rel="apple-touch-icon" href="/assets/images/logo-v2.png" />
+
   <style>
-:root{
+    /* -------------------------------------------------
+      Admin page wiring to shared brand tokens
+    ------------------------------------------------- */
+    :root{
       --purple: var(--ats-purple);
       --purple2: var(--ats-purple2);
       --yellow: var(--ats-yellow);
+      --ink: var(--ats-ink);
       --muted: var(--ats-muted);
-      --border: var(--ats-border);
       --card: var(--ats-card);
+      --border: var(--ats-border);
       --shadow: var(--ats-shadow);
       --shadow2: var(--ats-shadow2);
       --r-lg: var(--ats-r-lg);
       --r-md: var(--ats-r-md);
       --r-sm: var(--ats-r-sm);
     }
+
     *{box-sizing:border-box}
+
     body{
       margin:0;
-      font-family: Arial, sans-serif;
+      font-family: Arial, sans-serif; /* matches site */
       color:#fff;
-      background: linear-gradient(135deg, var(--purple), var(--blue));
+      background: linear-gradient(135deg, var(--purple), var(--purple2)); /* ✅ FIXED */
       min-height:100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
+
     .topbar{
       padding:18px 18px 14px;
       display:flex;
@@ -37,98 +51,171 @@
       justify-content:space-between;
       gap:12px;
     }
+
     .brand{ display:flex; align-items:center; gap:12px; }
+
+    /* Optional icon badge */
     .sun{
       width:44px; height:44px;
       border-radius:14px;
       border:1px solid var(--border);
       background: rgba(255,255,255,.12);
       display:flex; align-items:center; justify-content:center;
-      font-size:22px; user-select:none;
+      font-size:22px;
+      user-select:none;
+      box-shadow: var(--shadow2);
     }
-    .title{ font-weight:900; font-size:18px; line-height:1.1; }
-    .sub{ font-size:12px; color: rgba(255,255,255,.85); margin-top:4px; }
+
+    .title{
+      font-weight:900;
+      font-size:18px;
+      line-height:1.1;
+      letter-spacing:.2px;
+    }
+
+    .sub{
+      font-size:12px;
+      color: rgba(255,255,255,.85);
+      margin-top:4px;
+    }
+
     .accentline{
-      height:4px;
+      height:6px; /* ✅ slightly thicker */
       background: var(--yellow);
       border-radius:999px;
       margin:0 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.18);
     }
-    .wrap{ max-width:1050px; margin:0 auto; padding:18px; }
+
+    .wrap{
+      max-width:1050px;
+      margin:0 auto;
+      padding:18px;
+      padding-bottom: 28px;
+    }
+
     .status{
       margin:14px 0 18px;
-      padding:12px 14px;
-      border-radius:14px;
+      padding:14px 16px; /* ✅ bigger tap/reading spacing */
+      border-radius: var(--r-md);
       background: rgba(255,255,255,.10);
       border:1px solid var(--border);
       color:#fff;
       font-size:14px;
       white-space:pre-wrap;
+      box-shadow: var(--shadow2);
     }
+
     .grid{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap:14px;
     }
-    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+      .topbar{ padding:16px 14px 12px; }
+      .wrap{ padding:14px; }
+    }
+
     .card{
       background: var(--card);
       border:1px solid var(--border);
-      border-radius:18px;
-      padding:16px;
+      border-radius: var(--r-lg);
+      padding:18px; /* ✅ more padding */
       backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px rgba(0,0,0,.20);
+      box-shadow: var(--shadow);
     }
-    .card h3{ margin:0 0 6px; font-size:16px; font-weight:900; }
+
+    .card h3{
+      margin:0 0 8px;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
     .card p{
-      margin:0 0 12px;
+      margin:0 0 14px;
       color: rgba(255,255,255,.86);
       font-size:13px;
-      line-height:1.5;
+      line-height:1.55;
     }
+
     .btn{
-      display:inline-block;
+      display:inline-flex;              /* ✅ better tap box */
+      align-items:center;
+      justify-content:center;
       width:100%;
-      text-align:center;
-      padding:12px 12px;
-      border-radius:12px;
+      min-height:48px;                  /* ✅ iPhone tap target */
+      padding:14px 14px;                /* ✅ more tap spacing */
+      border-radius: var(--r-md);
       background: var(--yellow);
       color: #111;
       font-weight:900;
       text-decoration:none;
       border:0;
       cursor:pointer;
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+      transform: translateZ(0);
     }
+    .btn:active{
+      transform: scale(.99);
+    }
+
     .btn.secondary{
       background: rgba(0,0,0,.20);
       color:#fff;
       border:1px solid var(--border);
+      box-shadow: var(--shadow2);
     }
+
     .small{
       font-size:12px;
       color: rgba(255,255,255,.80);
       margin-top:10px;
       word-break:break-word;
     }
+
     .hidden{ display:none; }
 
     /* Desktop login form */
-    .row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
     .input{
       flex:1;
       min-width:220px;
+      min-height:48px;                 /* ✅ iPhone tap target */
       padding:12px 12px;
-      border-radius:12px;
+      border-radius: var(--r-md);
       border:1px solid var(--border);
       background: rgba(0,0,0,.15);
       color:#fff;
       outline:none;
     }
-    label.chk{ display:flex; align-items:center; gap:8px; font-size:13px; color: rgba(255,255,255,.85); }
+    .input::placeholder{
+      color: rgba(255,255,255,.65);
+    }
+
+    label.chk{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+      color: rgba(255,255,255,.85);
+      padding:8px 0;
+    }
+
+    /* Make checkbox easier on mobile */
+    label.chk input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      accent-color: var(--yellow);
+    }
   </style>
-  <link rel="stylesheet" href="/admin/admin-brand.css">
-  <link rel="icon" type="image/png" href="/assets/images/logo-v2.png">
-  <link rel="apple-touch-icon" href="/assets/images/logo-v2.png">
 </head>
 
 <body>
@@ -155,10 +242,10 @@
 
       <div class="row">
         <input class="input" id="desktopToken" placeholder="Enter token (ex: E01 desktop token)" autocomplete="off" />
-        <button class="btn" id="btnDesktopSignIn">Sign In</button>
+        <button class="btn" id="btnDesktopSignIn" type="button">Sign In</button>
       </div>
 
-      <div class="row" style="margin-top:8px;">
+      <div class="row" style="margin-top:10px;">
         <label class="chk">
           <input type="checkbox" id="rememberDevice" checked />
           Remember on this device
@@ -205,5 +292,3 @@
   <script src="/admin/admin.js"></script>
 </body>
 </html>
-<link rel="icon" type="image/png" href="assets/images/Logo-v2.png">
-<link rel="apple-touch-icon" href="assets/images/Logo-v2.png">
