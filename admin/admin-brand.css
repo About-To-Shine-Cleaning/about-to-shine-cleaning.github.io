@@ -1,0 +1,26 @@
+/* ATS Admin Brand — shared styles for /admin pages */
+:root{
+  --ats-purple:#5b2aa8;
+  --ats-purple2:#3f1c83;
+  --ats-yellow:#FFD700;
+
+  --ats-muted: rgba(255,255,255,.86);
+  --ats-border: rgba(255,255,255,.18);
+  --ats-card: rgba(255,255,255,.10);
+
+  --ats-shadow: 0 12px 30px rgba(0,0,0,.22);
+  --ats-shadow2: 0 18px 44px rgba(0,0,0,.28);
+
+  --ats-r-lg:18px;
+  --ats-r-md:14px;
+  --ats-r-sm:12px;
+
+  --ats-font: system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+/* Basic normalization for admin pages */
+html,body{height:100%}
+body{
+  font-family: var(--ats-font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
