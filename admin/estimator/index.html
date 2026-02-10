@@ -6,10 +6,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <style>
-:root{
-      --purple: var(--ats-purple);
-      --blue: var(--ats-purple2);
-      --yellow: var(--ats-yellow);
+    
+    <img src="assets/images/logo-v2.png" alt="About To Shine Cleaning Logo">
+
+    :root{
+      --purple:#5b2a86;
+      --blue:#2f7bdc;
+      --yellow:#FFD84D;
       --ink:#111827;
       --muted:#6b7280;
       --border:#e5e7eb;
@@ -59,11 +62,11 @@
     .modalTitle{font-weight:900}
     .note{font-size:12px; color:var(--muted); margin-top:8px}
     .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
-    .emailRow{
+    .Row{
       display:flex; align-items:center; gap:10px; font-size:13px; color:#111827;
       padding:8px 10px; border:1px solid var(--border); border-radius:12px; background:#fff; width:fit-content;
     }
-    .emailRow input{width:auto}
+    .Row input{width:auto}
     a.back{color:#fff; text-decoration:none; font-weight:900;}
 
     /* error banner */
@@ -74,9 +77,7 @@
       border:1px solid #fecaca;
     }
   </style>
-  <link rel="stylesheet" href="/admin/admin-brand.css">
-  <link rel="icon" type="image/png" href="/assets/images/logo-v2.png">
-  <link rel="apple-touch-icon" href="/assets/images/logo-v2.png">
+<script type="application/ld+json" id="ats-schema">{"@context": "https://schema.org", "@type": "CleaningService", "name": "About To Shine Cleaning", "url": "https://abouttoshinecleaning.com", "telephone": "+1-484-223-8496", "": "", "sameAs": ["https://g.page/r/CVKX4yXWXTEVEBM/review", "https://www.facebook.com/abouttoshinecleaning/", "https://www.yelp.com/biz/about-to-shine-cleaning-emmaus", "https://nextdoor.com/pages/about-to-shine-cleaning-emmaus-pa/", "https://www.yellowpages.com/emmaus-pa/mip/about-to-shine-cleaning-526438162"]}</script>
 </head>
 
 <body>
@@ -109,10 +110,7 @@
         <div><label>Client Name</label><input id="clientName" placeholder="Last, First (recommended)"/></div>
         <div><label>Phone</label><input id="clientPhone" placeholder="(555) 555-5555"/></div>
         <div><label>Address</label><input id="clientAddress" placeholder="Street, City, State"/></div>
-        <div><label>Email</label><input id="clientEmail" placeholder="name@email.com"/></div>
-
-        <div>
-          <label>Preferred Day</label>
+        <div><label>Preferred Day</label>
           <select id="prefDay">
             <option value="">Select</option>
             <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
@@ -139,9 +137,9 @@
       <div style="display:flex; flex-direction:column; gap:8px;">
         <div><b>Total:</b> <span id="total">$0.00</span></div>
 
-        <label class="emailRow">
-          <input type="checkbox" id="sendEmail" />
-          Email estimate PDF to client
+        <label class="Row">
+          <input type="checkbox" id="send" />
+          estimate PDF to client
         </label>
       </div>
 

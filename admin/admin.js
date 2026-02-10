@@ -35,7 +35,17 @@
   const btnDesktopSignIn = document.getElementById("btnDesktopSignIn");
   const btnClearAccess = document.getElementById("btnClearAccess");
 
-  function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ""; }
+  function setStatus(msg, state) {
+    if (!statusEl) return;
+
+    statusEl.textContent = msg || "";
+    statusEl.classList.remove("is-loading", "is-success", "is-error");
+
+    if (state === "loading") statusEl.classList.add("is-loading");
+    if (state === "success") statusEl.classList.add("is-success");
+    if (state === "error") statusEl.classList.add("is-error");
+  }
+
   function setDebug(msg) { if (debugEl) debugEl.textContent = msg || ""; }
 
   function getDeviceKey() {
@@ -119,7 +129,8 @@
     try { sessionStorage.removeItem(TOKEN_STORAGE); } catch(e){}
     try { sessionStorage.removeItem(AUTH_STORAGE); } catch(e){}
     try { localStorage.removeItem(TOKEN_LOCAL); } catch(e){}
-    setStatus("Access cleared. Reload to sign in again.");
+
+    setStatus("Access cleared. Reload to sign in again.", "loading");
     if (cardsEl) cardsEl.classList.add("hidden");
     if (desktopLogin) desktopLogin.classList.remove("hidden");
     if (whoEl) whoEl.textContent = "";
@@ -147,17 +158,21 @@
     const deviceKey = getDeviceKey();
 
     setDebug(`API_URL: ${API_URL}`);
-    setStatus("Checking secure API (ping)…");
+
+    setStatus("Checking secure API (ping)…", "loading");
     const p = await ping();
     if (!p || p.ok !== true) {
-      setStatus("Error: ping failed.\n\n" + JSON.stringify(p || {}, null, 2));
+      setStatus("Error: ping failed.\n\n" + JSON.stringify(p || {}, null, 2), "error");
       return;
     }
 
-    setStatus("Checking access…");
+    setStatus("Checking access…", "loading");
     const res = await auth(token, deviceKey);
     if (!res || !res.ok) {
-      setStatus(`Denied: ${res && res.error ? res.error : "unauthorized"}\n\n${JSON.stringify(res || {}, null, 2)}`);
+      setStatus(
+        `Denied: ${res && res.error ? res.error : "unauthorized"}\n\n${JSON.stringify(res || {}, null, 2)}`,
+        "error"
+      );
       return;
     }
 
@@ -173,7 +188,7 @@
     saveToken(token, remember);
 
     showCards(res.employeeId, res.employeeName);
-    setStatus("Access granted ✅");
+    setStatus("Access granted ✅", "success");
     removeTokenFromUrl();
     setDebug("Device binding active. Token saved. Token removed from address bar.");
   }
@@ -187,14 +202,16 @@
 
     // If no token anywhere -> show desktop sign-in box (Option A)
     if (!token) {
-      setStatus("Desktop sign-in required.\n\n(Or open via NFC link that includes ?t=TOKEN)");
+      setStatus("Desktop sign-in required.\n\n(Or open via NFC link that includes ?t=TOKEN)", "loading");
       if (desktopLogin) desktopLogin.classList.remove("hidden");
 
       if (btnDesktopSignIn) {
         btnDesktopSignIn.onclick = () => {
           const t = (desktopToken?.value || "").trim();
           if (!t) { alert("Enter your desktop token."); return; }
-          runAuthFlow(t, !!rememberDevice?.checked).catch(err => setStatus(String(err?.message || err)));
+          runAuthFlow(t, !!rememberDevice?.checked).catch(err =>
+            setStatus(String(err?.message || err), "error")
+          );
         };
       }
       if (btnClearAccess) btnClearAccess.onclick = () => clearAccess();
@@ -202,13 +219,15 @@
     }
 
     // Token exists (URL or storage) -> auth it
-    const remember = tokenFromUrl ? true : true; // default remember on device; you can flip if desired
+    const remember = true; // default remember on device
     await runAuthFlow(token, remember);
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => boot().catch(err => setStatus(String(err?.message || err))));
+    document.addEventListener("DOMContentLoaded", () =>
+      boot().catch(err => setStatus(String(err?.message || err), "error"))
+    );
   } else {
-    boot().catch(err => setStatus(String(err?.message || err)));
+    boot().catch(err => setStatus(String(err?.message || err), "error"));
   }
 })();

@@ -1,30 +1,7 @@
 /* =================================================
-   RESET / SAFETY
-================================================= */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html, body {
-  width: 100%;
-  overflow-x: hidden;
-  margin: 0;
-}
-
-/* =================================================
    BRAND VARIABLES
+   (Single source of truth in assets/css/site-brand.css)
 ================================================= */
-:root {
-  --brand-yellow: #FFD700;
-  --brand-black: #000;
-  --text-dark: #333;
-
-  /* TRUE PURPLE (no blue) */
-  --ats-purple: #5A189A;
-}
-
 /* =================================================
    BASE TYPOGRAPHY
 ================================================= */
@@ -93,8 +70,8 @@ section {
    HEADER / NAV (PURPLE + YELLOW DIVIDER)
 ================================================= */
 .site-header {
-  background: var(--ats-purple);
-  border-bottom: 5px solid var(--brand-yellow); /* slightly thicker yellow */
+  background: var(--ats-header-bg);
+  border-bottom: 5px solid var(--ats-divider); /* slightly thicker yellow */
   position: relative;
 }
 
@@ -123,7 +100,7 @@ section {
 }
 
 .main-nav a.cta {
-  background: var(--brand-yellow);
+  background: var(--ats-divider);
   color: #111;
   padding: 8px 14px;
   border-radius: 12px;
@@ -160,7 +137,7 @@ section {
     flex-direction: column;
     align-items: center;
     padding: 20px 0;
-    border-bottom: 5px solid var(--brand-yellow);
+    border-bottom: 5px solid var(--ats-divider);
   }
 
   .main-nav.open {
@@ -177,8 +154,8 @@ section {
 ================================================= */
 .button {
   display: inline-block;
-  background: var(--brand-black);
-  color: var(--brand-yellow);
+  background: var(--ats-button-bg);
+  color: var(--ats-button-text);
   padding: 12px 25px;
   border-radius: 6px;
   font-weight: bold;
@@ -229,8 +206,8 @@ section {
 
 .quote-form button {
   grid-column: 1 / -1;
-  background: var(--brand-black);
-  color: var(--brand-yellow);
+  background: var(--ats-button-bg);
+  color: var(--ats-button-text);
   padding: 12px 22px;
   border: none;
   border-radius: 6px;
@@ -285,10 +262,10 @@ section {
    FOOTER (PURPLE + YELLOW DIVIDER)
 ================================================= */
 footer {
-  background: var(--ats-purple);
-  color: #ffffff;
+  background: var(--ats-footer-bg);
+color: #ffffff;
   text-align: center;
-  border-top: 5px solid var(--brand-yellow); /* slightly thicker yellow */
+  border-top: 5px solid var(--ats-divider); /* slightly thicker yellow */
 }
 
 .footer-inner {
@@ -318,7 +295,7 @@ footer p {
   z-index: 999;
 
   background: var(--ats-purple);
-  border-top: 5px solid var(--brand-yellow);
+  border-top: 5px solid var(--ats-divider);
 }
 
 .call-btn,
@@ -349,3 +326,275 @@ footer p {
 body {
   padding-bottom: 80px;
 }
+
+
+/* =================================================
+   FOOTER LINKS (SERVICE AREAS)
+================================================= */
+.footer-links {
+  max-width: 900px;
+  margin: 0 auto 18px;
+  padding: 0 14px;
+}
+
+.footer-links-title {
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.footer-links a {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer-links a:hover {
+  opacity: 0.9;
+}
+
+/* =================================================
+   BEFORE & AFTER (PAIRED) + CITY PAGE GALLERY CTA
+================================================= */
+.ba-pair-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin: 18px 0 34px;
+}
+.ba-pair{
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+}
+.ba-labels{
+  display:flex;
+  justify-content:space-between;
+  padding: 12px 14px;
+  font-weight:700;
+  color: var(--brand-black);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.ba-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.ba-col a, .ba-col img{
+  display:block;
+  width:100%;
+}
+.ba-col img{
+  width:100%;
+  height:auto;
+}
+.gallery-cta{
+  margin-top: 34px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.10);
+}
+.gallery-cta h2{
+  margin-top: 0;
+}
+@media (max-width: 700px){
+  .ba-row{ grid-template-columns: 1fr; }
+}
+
+
+/* =========================
+   FOOTER SOCIAL ICONS
+========================= */
+.footer-social{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+}
+.social-link{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.20);
+  box-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+.social-link svg{
+  width:22px;
+  height:22px;
+  fill: var(--brand-yellow);
+}
+.social-link:hover{
+  transform: translateY(-1px);
+}
+.social-link:active{
+  transform: translateY(0px);
+}
+.sr-only{
+  position:absolute;
+  width:1px; height:1px;
+  padding:0; margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+
+
+/* =================================================
+   SERVICES PAGE LAYOUT
+================================================= */
+.services-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:24px;
+  margin: 18px 0 8px;
+}
+.service-block{
+  background:#fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+  padding: 22px;
+}
+.service-block ul{ margin: 0 0 14px; }
+.service-block .muted{ color: #4b5563; font-size: 0.95rem; }
+@media (max-width: 900px){
+  .services-grid{ grid-template-columns: 1fr; }
+}
+
+/* Slightly larger tap targets on mobile */
+@media (max-width: 768px){
+  .main-nav a{ padding: 12px 8px; }
+  .button, .quote-form button{ padding: 14px 22px; }
+}
+
+
+/* ===== Footer Service Areas + Social Icons ===== */
+.footer-inner{
+  gap: 18px;
+}
+.footer-links, .footer-socials{
+  width: 100%;
+  max-width: 1100px;
+}
+.footer-links ul{
+  list-style: none;
+  padding-left: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.footer-links a{
+  text-decoration: underline;
+}
+.social-icons{
+  margin-top: 10px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.social-icons img{
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+
+/* ===============================
+   FOOTER — TIGHT + LINKY
+=============================== */
+.site-footer{
+  background: var(--ats-purple);
+  color: #fff;
+  border-top: 6px solid var(--ats-yellow);
+}
+.site-footer .footer-inner{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 34px 20px 22px;
+}
+.footer-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+@media (max-width: 900px){
+  .footer-grid{ grid-template-columns: 1fr; text-align: center; }
+  .footer-links{ display: inline-block; text-align: left; }
+}
+.footer-col h3{
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.footer-links{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.footer-links li{ margin: 8px 0; }
+.footer-links a{
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 700;
+}
+.footer-links a:hover{ opacity: .9; }
+
+.footer-social{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+@media (max-width: 900px){
+  .footer-social{ justify-content: center; }
+}
+.social-icon{
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.18);
+  color: #fff;
+  font-weight: 900;
+  text-decoration: none;
+}
+.social-icon:hover{ background: rgba(255,255,255,.16); }
+
+.footer-callout{
+  margin: 18px auto 10px;
+  max-width: 900px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 900;
+}
+.footer-bottom{
+  text-align: center;
+  font-weight: 700;
+  opacity: .95;
+  margin-top: 8px;
+}
+
+/* Remove any legacy "Find Us" blocks if present */
+.find-us, .footer-findus, .footer-find-us{ display:none !important; }

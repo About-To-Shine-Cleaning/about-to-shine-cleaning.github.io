@@ -1,0 +1,25 @@
+/* =================================================
+   ATS Site Brand Tokens (Single Source of Truth)
+   - Update colors here to affect ALL public pages
+================================================= */
+:root {
+  /* Core */
+  --brand-yellow: #FFD700;
+  --brand-black: #000000;
+  --text-dark: #333333;
+
+  /* ATS Purple System (public site) */
+  --ats-purple: #5A189A;     /* true purple */
+  --ats-purple2: #3A0CA3;    /* deeper purple (no blue cast) */
+
+  /* Page surfaces */
+  --ats-header-bg: var(--ats-purple);
+  --ats-footer-bg: var(--ats-purple);
+
+  /* Dividers */
+  --ats-divider: var(--brand-yellow);
+
+  /* Buttons */
+  --ats-button-bg: var(--brand-black);
+  --ats-button-text: var(--brand-yellow);
+}
