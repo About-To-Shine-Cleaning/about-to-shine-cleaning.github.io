@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ATS Site Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" href="/assets/images/logo-v2.png">
+  <link rel="apple-touch-icon" href="/assets/images/logo-v2.png">
+
+  <style>
+
+    :root{
+      /* Brand */
+      --purple:#5b2aa8;
+      --purple2:#3f1c83;
+      --yellow:#FFD700;
+
+      /* UI */
+      --muted:rgba(255,255,255,.86);
+      --card:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.18);
+
+      /* Shadows */
+      --shadow: 0 12px 30px rgba(0,0,0,.22);
+      --shadow2: 0 18px 44px rgba(0,0,0,.28);
+
+      /* Radius */
+      --r-lg: 18px;
+      --r-md: 14px;
+      --r-sm: 12px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color:#fff;
+      background: linear-gradient(135deg, var(--purple), var(--purple2));
+      min-height:100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* ===== Top bar ===== */
+    .topbar{
+      padding: 18px 18px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{ display:flex; align-items:center; gap:12px; }
+
+    .brand-logo{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 auto;
+    }
+    .brand-logo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .title{
+      font-weight: 800;
+      letter-spacing: .2px;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+    .sub{
+      font-size: 12px;
+      color: rgba(255,255,255,.86);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+    #who{
+      font-size: 12px;
+      color: rgba(255,255,255,.86);
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    .accentline{
+      height: 6px;
+      background: var(--yellow);
+      border-radius: 999px;
+      margin: 0 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.18);
+    }
+
+    .wrap{
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    /* ===== Status box ===== */
+    .status{
+      margin: 16px 0 18px;
+      padding: 14px 14px;
+      border-radius: var(--r-md);
+      background: rgba(255,255,255,.10);
+      border: 1px solid var(--border);
+      color:#fff;
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      box-shadow: var(--shadow);
+    }
+
+    .status.is-loading{
+      border-color: rgba(255,255,255,.22);
+      background: rgba(255,255,255,.10);
+    }
+    .status.is-success{
+      border-color: rgba(34,197,94,.45);
+      background: rgba(34,197,94,.14);
+      box-shadow: 0 14px 34px rgba(0,0,0,.22);
+    }
+    .status.is-error{
+      border-color: rgba(239,68,68,.45);
+      background: rgba(239,68,68,.14);
+      box-shadow: 0 14px 34px rgba(0,0,0,.22);
+    }
+
+    /* ===== Grid/cards ===== */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+
+    .card h3{
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .card p{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* ===== Buttons (bigger tap targets) ===== */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      padding: 14px 14px;
+      min-height: 48px;
+      border-radius: var(--r-sm);
+      background: var(--yellow);
+      color: #111;
+      font-weight: 800;
+      text-decoration:none;
+      border:0;
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+      transition: transform .06s ease, filter .12s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+    }
+    .btn:active{ transform: scale(.985); }
+
+    .btn.secondary{
+      background: rgba(0,0,0,.22);
+      color:#fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 22px rgba(0,0,0,.14);
+    }
+
+    .small{
+      font-size:12px;
+      color: rgba(255,255,255,.80);
+      margin-top: 10px;
+      word-break: break-word;
+      line-height: 1.45;
+    }
+
+    .hidden{ display:none; }
+
+    /* ===== Desktop login ===== */
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .input{
+      flex:1;
+      min-width:220px;
+      padding: 13px 12px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.15);
+      color:#fff;
+      outline:none;
+      font-size:14px;
+    }
+    .input::placeholder{ color: rgba(255,255,255,.60); }
+
+    label.chk{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color: rgba(255,255,255,.85);
+      user-select:none;
+    }
+
+    /* ===== iPhone spacing polish ===== */
+    @media (max-width: 520px){
+      .topbar{ padding: 16px 14px 12px; }
+      .wrap{ padding: 14px; }
+      .card{ padding: 18px; box-shadow: var(--shadow2); }
+      .accentline{ margin: 0 14px; }
+      .status{ font-size: 15px; padding: 16px 14px; }
+    }
+  
+  /* Small tweaks for tables on this page */
+  table{ width:100%; border-collapse:collapse; }
+  th,td{ padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.14); font-size:13px; }
+  th{ text-align:left; color: rgba(255,255,255,.90); font-weight:800; }
+  td{ color: rgba(255,255,255,.86); }
+  code{ background: rgba(0,0,0,.20); padding:2px 6px; border-radius:10px; }
+  .pill{ display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.10); font-size:12px; }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="/assets/images/logo-v2.png" alt="">
+      </div>
+      <div>
+        <div class="title">About To Shine Cleaning</div>
+        <div class="sub">Site Report (GA4)</div>
+      </div>
+    </div>
+
+    <div class="sub" style="text-align:right;">
+      <a href="/admin/" style="color: rgba(255,255,255,.86); text-decoration:none; font-weight:800;">← Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="accentline"></div>
+
+  <div class="wrap">
+    <div class="status is-loading" id="status">Loading GA4 report…</div>
+
+    <div class="grid" style="grid-template-columns: repeat(2, 1fr);" id="reportGrid">
+      <div class="card">
+        <h3>New vs Returning</h3>
+        <p>Active users and sessions split by new vs returning visitors.</p>
+        <div class="small" id="newReturning">—</div>
+      </div>
+
+      <div class="card">
+        <h3>Totals (Last 30 Days)</h3>
+        <p>Sessions and active users (overview).</p>
+        <div class="small"><span class="pill">Range</span> <code>30daysAgo → today</code></div>
+        <div style="height:10px"></div>
+        <div class="small" id="totals">—</div>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <h3>Top Sources</h3>
+        <p>Sessions by source / medium.</p>
+        <div style="height:8px"></div>
+        <div class="small" style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Medium</th>
+                <th>Sessions</th>
+                <th>Active Users</th>
+              </tr>
+            </thead>
+            <tbody id="srcTable">
+              <tr><td colspan="4">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="small" id="debugLine" style="margin-top:12px;"></div>
+  </div>
+
+  <script>
+
+      // 🔒 Require Admin Panel auth (set by /admin/admin.js)
+      const AUTH_STORAGE  = "ats_admin_auth_v1";        // sessionStorage JSON
+      const TOKEN_STORAGE = "ats_admin_token_v1";       // sessionStorage token
+      const TOKEN_LOCAL   = "ats_admin_token_local_v1"; // localStorage token
+
+      function readJson_(k){
+        try{ return JSON.parse(sessionStorage.getItem(k) || ""); }catch(e){ return null; }
+      }
+      function loadAnyToken_(){
+        try{ const s=(sessionStorage.getItem(TOKEN_STORAGE)||"").trim(); if(s) return s; }catch(e){}
+        try{ const l=(localStorage.getItem(TOKEN_LOCAL)||"").trim(); if(l) return l; }catch(e){}
+        return "";
+      }
+      function requireAdminAuth_(){
+        const statusEl = document.getElementById("status");
+        const whoEl = document.getElementById("who");
+
+        const auth = readJson_(AUTH_STORAGE);
+        const token = loadAnyToken_();
+
+        if (!auth || auth.ok !== true || !auth.employeeId || !token) {
+          if (statusEl) {
+            statusEl.textContent = "Admin sign-in required. Redirecting to /admin/…";
+            statusEl.classList.remove("is-success");
+            statusEl.classList.add("is-loading");
+          }
+          // Send them back to the protected entry point
+          setTimeout(() => { window.location.href = "/admin/"; }, 600);
+          return null;
+        }
+
+        if (whoEl) whoEl.textContent = `${auth.employeeId} • ${auth.employeeName || auth.employeeId}`;
+        return auth;
+      }
+
+      // Stop here if not signed in
+      const _AUTH = requireAdminAuth_();
+      if (!_AUTH) { /* redirect scheduled */ }
+
+      // ✅ MUST be your Apps Script Web App URL that ends in /exec
+      const GA_API_URL = "https://script.google.com/macros/s/AKfycbwebnc7k-OlEuOKLc_WgGalVeFISPfsTniFdSIhfhi7vra-ALZcbNGZcj7Qti3nFklH/exec";
+      const RANGE = "30daysAgo"; // matches your Code.gs supported range format
+
+      function jsonp(url){
+        return new Promise((resolve,reject)=>{
+          const cb="cb_"+Math.random().toString(36).slice(2);
+          const s=document.createElement("script");
+
+          window[cb]=(data)=>{ 
+            try { resolve(data); } finally { 
+              try { delete window[cb]; } catch(e) {}
+              try { s.remove(); } catch(e) {}
+            }
+          };
+
+          s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
+          s.onerror = () => {
+            try { delete window[cb]; } catch(e) {}
+            try { s.remove(); } catch(e) {}
+            reject(new Error("JSONP failed: " + url));
+          };
+
+          document.body.appendChild(s);
+        });
+      }
+
+      function routeUrl(route){
+        const p = new URLSearchParams();
+        p.set("route", route);
+        p.set("range", RANGE);
+        return GA_API_URL + "?" + p.toString();
+      }
+
+      function fmt(n){ return Number(n||0).toLocaleString(); }
+
+      async function load(){
+        const nrEl = document.getElementById("newReturning");
+        const totalsEl = document.getElementById("totals");
+        const tbody = document.getElementById("srcTable");
+        const dbg = document.getElementById("debugLine");
+
+        if(!GA_API_URL || GA_API_URL.includes("PASTE_")){
+          nrEl.textContent = "Missing GA_API_URL";
+          totalsEl.textContent = "—";
+          return;
+        }
+
+        if (dbg) dbg.textContent = "Loading from: " + GA_API_URL;
+
+        // 1) New vs Returning
+        const nr = await jsonp(routeUrl("ga_new_returning"));
+        if(!nr || !nr.ok){
+          throw new Error(nr?.error || "ga_new_returning failed");
+        }
+
+        const nrRows = nr?.res?.rows || [];
+        const map = { new: 0, returning: 0 };
+        nrRows.forEach(r=>{
+          const k = (r?.dimensionValues?.[0]?.value || "").toLowerCase();
+          const v = Number(r?.metricValues?.[0]?.value || 0);
+          if (k === "new") map.new = v;
+          if (k === "returning") map.returning = v;
+        });
+        nrEl.textContent = `New: ${fmt(map.new)} • Returning: ${fmt(map.returning)}`;
+
+        // 2) Totals (sum daily)
+        const daily = await jsonp(routeUrl("ga_overview_daily"));
+        if(!daily || !daily.ok){
+          throw new Error(daily?.error || "ga_overview_daily failed");
+        }
+
+        const drows = daily?.res?.rows || [];
+        let users=0, sessions=0, views=0;
+        drows.forEach(r=>{
+          users += Number(r?.metricValues?.[0]?.value || 0);
+          sessions += Number(r?.metricValues?.[1]?.value || 0);
+          views += Number(r?.metricValues?.[2]?.value || 0);
+        });
+        totalsEl.textContent = `Users: ${fmt(users)} • Sessions: ${fmt(sessions)} • Views: ${fmt(views)}`;
+
+        // 3) Source / Medium
+        const sm = await jsonp(routeUrl("ga_source_medium"));
+        if(!sm || !sm.ok){
+          throw new Error(sm?.error || "ga_source_medium failed");
+        }
+
+        const srows = sm?.res?.rows || [];
+        tbody.innerHTML = "";
+
+        srows.forEach(r=>{
+          const source = r?.dimensionValues?.[0]?.value || "";
+          const medium = r?.dimensionValues?.[1]?.value || "";
+          const sess = Number(r?.metricValues?.[0]?.value || 0);
+          const au = Number(r?.metricValues?.[1]?.value || 0);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${source}</td><td>${medium}</td><td>${fmt(sess)}</td><td>${fmt(au)}</td>`;
+          tbody.appendChild(tr);
+        });
+
+        if (srows.length === 0){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="4" class="small">No data returned yet.</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+
+      if (_AUTH) {
+        load().catch(err=>{
+          console.error(err);
+          document.getElementById("newReturning").textContent = "Load failed (check Apps Script URL + permissions).";
+          document.getElementById("totals").textContent = "—";
+        });
+      }
+    
+  </script>
+</body>
+</html>

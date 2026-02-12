@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ATS Legacy Pricing (Admin)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+
+  <link rel="icon" type="image/png" href="/assets/images/logo-v2.png">
+  <link rel="apple-touch-icon" href="/assets/images/logo-v2.png">
+
+  <style>
+    :root{
+      --purple:#5b2aa8;
+      --purple2:#3f1c83;
+      --yellow:#FFD700;
+
+      --muted:rgba(255,255,255,.86);
+      --card:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.18);
+
+      --shadow: 0 12px 30px rgba(0,0,0,.22);
+      --shadow2: 0 18px 44px rgba(0,0,0,.28);
+
+      --r-lg: 18px;
+      --r-md: 14px;
+      --r-sm: 12px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color:#fff;
+      background: linear-gradient(135deg, var(--purple), var(--purple2));
+      min-height:100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .topbar{
+      padding: 18px 18px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand-logo{
+      width:44px; height:44px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 auto;
+    }
+    .brand-logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .title{ font-weight:800; letter-spacing:.2px; font-size:18px; line-height:1.15; }
+    .sub{ font-size:12px; color:rgba(255,255,255,.86); margin-top:4px; line-height:1.3; }
+    #who{ font-size:12px; color:rgba(255,255,255,.86); text-align:right; white-space:nowrap; }
+    .accentline{
+      height: 6px;
+      background: var(--yellow);
+      border-radius: 999px;
+      margin: 0 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.18);
+    }
+    .wrap{ max-width: 1050px; margin:0 auto; padding:18px; }
+    .status{
+      margin: 16px 0 18px;
+      padding: 14px;
+      border-radius: var(--r-md);
+      background: rgba(255,255,255,.10);
+      border: 1px solid var(--border);
+      color:#fff;
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      box-shadow: var(--shadow);
+    }
+    .status.is-loading{ border-color: rgba(255,255,255,.22); }
+    .status.is-success{ border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.14); box-shadow: 0 14px 34px rgba(0,0,0,.22); }
+    .status.is-error{ border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.14); box-shadow: 0 14px 34px rgba(0,0,0,.22); }
+
+    .grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+    .card h3{ margin:0 0 8px; font-size:16px; font-weight:800; letter-spacing:.2px; }
+    .card p{ margin:0 0 14px; color: var(--muted); font-size:13px; line-height:1.55; }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .field{ display:flex; flex-direction:column; gap:6px; flex: 1; min-width: 220px; }
+    .label{ font-size:12px; color: rgba(255,255,255,.86); }
+    .input, .select{
+      width:100%;
+      padding: 13px 12px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.15);
+      color:#fff;
+      outline:none;
+      font-size:14px;
+    }
+    .input::placeholder{ color: rgba(255,255,255,.60); }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      padding: 14px 14px;
+      min-height: 48px;
+      border-radius: var(--r-sm);
+      background: var(--yellow);
+      color:#111;
+      font-weight: 800;
+      text-decoration:none;
+      border:0;
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+      transition: transform .06s ease, filter .12s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+    }
+    .btn:active{ transform: scale(.985); }
+    .btn.secondary{
+      background: rgba(0,0,0,.22);
+      color:#fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 22px rgba(0,0,0,.14);
+    }
+
+    .small{ font-size:12px; color: rgba(255,255,255,.80); margin-top: 10px; line-height: 1.45; word-break: break-word; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    table{ width:100%; border-collapse: collapse; margin-top: 10px; }
+    td{ padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,.15); font-size: 13px; }
+    td.k{ color: rgba(255,255,255,.88); font-weight: 700; }
+    td.v{ text-align:right; font-weight: 800; }
+    .pill{ display:inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: rgba(0,0,0,.18); font-size: 12px; color: rgba(255,255,255,.9); }
+
+    @media (max-width: 520px){
+      .topbar{ padding: 16px 14px 12px; }
+      .wrap{ padding: 14px; }
+      .card{ padding: 18px; box-shadow: var(--shadow2); }
+      .accentline{ margin: 0 14px; }
+      .status{ font-size: 15px; padding: 16px 14px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="/assets/images/logo-v2.png" alt="">
+      </div>
+      <div>
+        <div class="title">About To Shine Cleaning</div>
+        <div class="sub">Legacy Pricing (Admin)</div>
+      </div>
+    </div>
+    <div class="sub" id="who"></div>
+  </div>
+
+  <div class="accentline"></div>
+
+  <div class="wrap">
+    <div class="status is-loading" id="status">Loading…</div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Inputs</h3>
+        <p>Fill out the same inputs as the Legacy Calculator sheet. Click <b>Adjust</b> to see the results. Then click <b>Save + Generate PDF</b> to write to the sheet and create the Doc + PDF in Drive (using your existing Apps Script).</p>
+
+        <div class="row">
+          <div class="field">
+            <div class="label">Client name (optional)</div>
+            <input class="input" id="clientName" placeholder="Legacy Client" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="label">Billing method</div>
+            <select class="select" id="billingMethod">
+              <option value="weekly">Weekly rate</option>
+              <option value="monthly">Monthly total</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">Current amount</div>
+            <input class="input" id="currentAmount" type="number" step="0.01" value="160" />
+          </div>
+          <div class="field">
+            <div class="label">Weeks per invoice month</div>
+            <select class="select" id="weeksPerMonth">
+              <option value="4">4</option>
+              <option value="4.33">4.33</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="label">Sales tax rate</div>
+            <select class="select" id="taxRate">
+              <option value="0.06">6%</option>
+              <option value="0.07">7%</option>
+              <option value="0.08">8%</option>
+              <option value="0">0%</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">Strategy</div>
+            <select class="select" id="strategy">
+              <option value="absorb">Keep client total same (absorb tax)</option>
+              <option value="add_week">Add $ per week</option>
+              <option value="add_month">Add $ per month</option>
+              <option value="split_tax" selected>Client pays % of tax (split)</option>
+              <option value="target_net">Target my net revenue % (after tax)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="label">Add $ per week</div>
+            <input class="input" id="addPerWeek" type="number" step="0.01" value="0" />
+          </div>
+          <div class="field">
+            <div class="label">Add $ per month</div>
+            <input class="input" id="addPerMonth" type="number" step="0.01" value="0" />
+          </div>
+          <div class="field">
+            <div class="label">Client pays % of tax</div>
+            <select class="select" id="clientTaxShare">
+              <option value="0">0%</option>
+              <option value="0.25" selected>25%</option>
+              <option value="0.5">50%</option>
+              <option value="0.75">75%</option>
+              <option value="1">100%</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <div class="label">Target net revenue %</div>
+            <select class="select" id="targetNetPct">
+              <option value="0.9">90%</option>
+              <option value="0.95">95%</option>
+              <option value="1" selected>100%</option>
+              <option value="1.05">105%</option>
+              <option value="1.1">110%</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">Legacy API URL (Apps Script /exec)</div>
+            <input class="input mono" id="apiUrl" placeholder="https://script.google.com/macros/s/....../exec" />
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn" id="btnAdjust">Adjust</button>
+          <button class="btn secondary" id="btnSavePdf">Save + Generate PDF</button>
+        </div>
+
+        <div class="small">
+          <span class="pill">Admin‑auth protected</span>
+          <div style="margin-top:8px;">
+            This page uses your Admin Panel sign‑in (sessionStorage). The “Save + Generate PDF” button requires your Legacy Apps Script to expose a JSONP endpoint. If you haven’t added it yet, I’ll give you the exact backend code.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Outputs</h3>
+        <p id="explain">Click <b>Adjust</b> to see the adjusted totals.</p>
+
+        <table>
+          <tr><td class="k">Service subtotal (taxable base)</td><td class="v" id="outBase">$0.00</td></tr>
+          <tr><td class="k">Sales tax line item</td><td class="v" id="outTax">$0.00</td></tr>
+          <tr><td class="k">Total due</td><td class="v" id="outTotal">$0.00</td></tr>
+          <tr><td class="k">Weekly total</td><td class="v" id="outWeekly">$0.00</td></tr>
+          <tr><td class="k">Current billing total</td><td class="v" id="outOld">$0.00</td></tr>
+          <tr><td class="k">Pass-through increase</td><td class="v" id="outPass">$0.00</td></tr>
+          <tr><td class="k">Business absorbs</td><td class="v" id="outAbsorb">$0.00</td></tr>
+          <tr><td class="k">Client absorbs</td><td class="v" id="outClientAbsorb">$0.00</td></tr>
+        </table>
+
+        <div class="small" id="saveResult"></div>
+      </div>
+    </div>
+
+    <div class="small" id="debug"></div>
+  </div>
+
+  <script src="/admin/legacy/legacy.js"></script>
+</body>
+</html>
