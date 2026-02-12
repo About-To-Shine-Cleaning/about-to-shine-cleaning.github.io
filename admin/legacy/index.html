@@ -16,7 +16,6 @@
       --card:rgba(255,255,255,.10);
       --border:rgba(255,255,255,.18);
       --shadow: 0 12px 30px rgba(0,0,0,.22);
-      --shadow2: 0 18px 44px rgba(0,0,0,.28);
       --r-lg: 18px;
       --r-md: 14px;
       --r-sm: 12px;
@@ -28,42 +27,35 @@
       color:#fff;
       background: linear-gradient(135deg, var(--purple), var(--purple2));
       min-height:100vh;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
     }
-    .topbar{
-      padding: 18px 18px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
+    .topbar{ padding:18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .brand{ display:flex; align-items:center; gap:12px; }
     .brand-logo{
       width:44px;height:44px;border-radius:14px;border:1px solid var(--border);
-      background: rgba(255,255,255,.12);box-shadow: var(--shadow);
-      overflow:hidden;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+      background: rgba(255,255,255,.12); box-shadow: var(--shadow);
+      overflow:hidden;display:flex;align-items:center;justify-content:center;
     }
     .brand-logo img{ width:100%;height:100%;object-fit:cover;display:block; }
-    .title{ font-weight: 800; letter-spacing:.2px; font-size:18px; line-height:1.15; }
-    .sub{ font-size:12px; color: rgba(255,255,255,.86); margin-top:4px; line-height:1.3; }
+    .title{ font-weight:800; font-size:18px; }
+    .sub{ font-size:12px; color: rgba(255,255,255,.86); margin-top:4px; }
     #who{ font-size:12px; color: rgba(255,255,255,.86); text-align:right; white-space:nowrap; }
-    .accentline{ height:6px;background:var(--yellow);border-radius:999px;margin:0 18px;box-shadow:0 6px 16px rgba(0,0,0,.18); }
+    .accentline{ height:6px;background:var(--yellow);border-radius:999px;margin:0 18px; }
     .wrap{ max-width: 900px; margin: 0 auto; padding: 18px; }
     .status{
-      margin: 16px 0 18px; padding: 14px 14px; border-radius: var(--r-md);
+      margin: 16px 0 18px; padding: 14px; border-radius: var(--r-md);
       background: rgba(255,255,255,.10); border: 1px solid var(--border);
-      color:#fff; font-size: 14px; white-space: pre-wrap; line-height:1.45; box-shadow: var(--shadow);
+      font-size: 14px; white-space: pre-wrap; line-height:1.45;
+      box-shadow: var(--shadow);
     }
-    .status.is-loading{ border-color: rgba(255,255,255,.22); }
+    .status.is-loading{ opacity: .9; }
     .status.is-success{ border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.14); }
     .status.is-error{ border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.14); }
     .card{
       background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--r-lg); padding: 18px; backdrop-filter: blur(10px);
+      border-radius: var(--r-lg); padding: 18px;
       box-shadow: var(--shadow); margin-bottom: 14px;
     }
-    .card h3{ margin:0 0 8px; font-size:16px; font-weight:800; letter-spacing:.2px; }
+    .card h3{ margin:0 0 8px; font-size:16px; font-weight:800; }
     .card p{ margin:0 0 14px; color: var(--muted); font-size:13px; line-height:1.55; }
     label{ display:block; font-size:12px; color: rgba(255,255,255,.85); margin: 10px 0 6px; }
     input, select{
@@ -71,35 +63,26 @@
       border: 1px solid var(--border); background: rgba(0,0,0,.15);
       color:#fff; outline:none; font-size:14px;
     }
-    input::placeholder{ color: rgba(255,255,255,.60); }
     .btn{
-      display:inline-flex; align-items:center; justify-content:center; width:100%;
-      padding: 14px 14px; min-height: 48px; border-radius: var(--r-sm);
-      background: var(--yellow); color:#111; font-weight:800; text-decoration:none;
-      border:0; cursor:pointer; box-shadow: 0 10px 22px rgba(0,0,0,.18);
-      transition: transform .06s ease, filter .12s ease; -webkit-tap-highlight-color: transparent;
-      user-select:none;
+      width:100%;
+      padding: 14px; min-height: 48px; border-radius: var(--r-sm);
+      background: var(--yellow); color:#111; font-weight:800;
+      border:0; cursor:pointer;
     }
-    .btn:active{ transform: scale(.985); }
-    .btn.secondary{ background: rgba(0,0,0,.22); color:#fff; border:1px solid var(--border); box-shadow: 0 10px 22px rgba(0,0,0,.14); }
+    .btn.secondary{ background: rgba(0,0,0,.22); color:#fff; border:1px solid var(--border); }
     .row{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 800px){ .row{ grid-template-columns: 1fr; } }
-    .small{ font-size:12px; color: rgba(255,255,255,.80); margin-top: 10px; word-break: break-word; line-height: 1.45; }
     .outgrid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 800px){ .outgrid{ grid-template-columns: 1fr; } }
     .kv{ display:flex; justify-content:space-between; gap:12px; padding: 10px 12px; border-radius: var(--r-sm); border:1px solid var(--border); background: rgba(0,0,0,.12); }
     .kv b{ font-weight:800; }
-    .kv span{ font-variant-numeric: tabular-nums; }
     .links a{ color: var(--yellow); font-weight: 800; text-decoration: none; }
-    .links a:hover{ text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="topbar">
     <div class="brand">
-      <div class="brand-logo" aria-hidden="true">
-        <img src="/assets/images/logo-v2.png" alt="">
-      </div>
+      <div class="brand-logo"><img src="/assets/images/logo-v2.png" alt=""></div>
       <div>
         <div class="title">About To Shine Cleaning</div>
         <div class="sub">Legacy Pricing (Admin)</div>
@@ -114,7 +97,7 @@
 
     <div class="card">
       <h3>Inputs</h3>
-      <p>Same inputs as the Legacy Calculator sheet. Tap <b>Adjust</b> to preview. Then <b>Save + Generate PDF</b> to log + create Doc/PDF in Drive.</p>
+      <p>Tap <b>Adjust</b> to preview. Then <b>Save + Generate PDF</b> to log + create Doc/PDF in Drive.</p>
 
       <label for="saveAs">Save As (required for PDF)</label>
       <input id="saveAs" placeholder='Example: "RL Reppert increase"' />
@@ -204,7 +187,7 @@
       <div style="height:10px;"></div>
       <button class="btn secondary" id="btnExport">Save + Generate PDF</button>
 
-      <div class="small">Admin-auth protected • API: <span id="apiHint"></span></div>
+      <div class="sub" style="margin-top:10px;">API: <span id="apiHint"></span></div>
     </div>
 
     <div class="card" id="outputsCard" style="display:none;">
@@ -222,49 +205,24 @@
         <div class="kv"><b>Business absorbs (monthly)</b><span id="o_bizabs"></span></div>
       </div>
 
-      <div class="small links" id="links"></div>
+      <div class="sub links" id="links" style="margin-top:10px;"></div>
     </div>
   </div>
 
   <script>
+    // Uses your Admin Panel sessionStorage sign-in
     const AUTH_STORAGE  = "ats_admin_auth_v1";
     const TOKEN_STORAGE = "ats_admin_token_v1";
     const TOKEN_LOCAL   = "ats_admin_token_local_v1";
-    const DEVICE_KEY_STORAGE = "ats_device_key_v1";
 
+    // ✅ PUT YOUR /exec URL HERE (ONLY HERE)
     const LEGACY_API_URL = "https://script.google.com/macros/s/AKfycbxjXVSAElo3scRPpHgipxfam-GITwNHeQsBbfBWmFSonO339gPDdUysUohcbcEk2Jew/exec";
 
-    const statusEl = document.getElementById("status");
-    const whoEl = document.getElementById("who");
-    const apiHint = document.getElementById("apiHint");
+    const el = (id) => document.getElementById(id);
 
-    const saveAsEl = document.getElementById("saveAs");
-    const clientNameEl = document.getElementById("clientName");
-    const billingMethodEl = document.getElementById("billingMethod");
-    const currentAmountEl = document.getElementById("currentAmount");
-    const weeksPerMonthEl = document.getElementById("weeksPerMonth");
-    const taxRateEl = document.getElementById("taxRate");
-    const strategyEl = document.getElementById("strategy");
-    const addPerWeekEl = document.getElementById("addPerWeek");
-    const addPerMonthEl = document.getElementById("addPerMonth");
-    const clientTaxShareEl = document.getElementById("clientTaxShare");
-    const targetNetPctEl = document.getElementById("targetNetPct");
-
-    const btnAdjust = document.getElementById("btnAdjust");
-    const btnExport = document.getElementById("btnExport");
-
-    const outputsCard = document.getElementById("outputsCard");
-    const explainEl = document.getElementById("explain");
-
-    const o_base = document.getElementById("o_base");
-    const o_tax = document.getElementById("o_tax");
-    const o_total = document.getElementById("o_total");
-    const o_weekly = document.getElementById("o_weekly");
-    const o_old = document.getElementById("o_old");
-    const o_pass = document.getElementById("o_pass");
-    const o_clientabs = document.getElementById("o_clientabs");
-    const o_bizabs = document.getElementById("o_bizabs");
-    const linksEl = document.getElementById("links");
+    const statusEl = el("status");
+    const whoEl = el("who");
+    const apiHint = el("apiHint");
 
     function setStatus(msg, state){
       statusEl.textContent = msg || "";
@@ -290,15 +248,6 @@
       return "";
     }
 
-    function getDeviceKey_(){
-      let k = localStorage.getItem(DEVICE_KEY_STORAGE);
-      if (!k){
-        k = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-        localStorage.setItem(DEVICE_KEY_STORAGE, k);
-      }
-      return k;
-    }
-
     function jsonp_(url){
       return new Promise((resolve, reject) => {
         const cb = "cb_" + Math.random().toString(36).slice(2);
@@ -311,8 +260,8 @@
         };
 
         window[cb] = (data) => { try{ resolve(data); } finally{ cleanup(); } };
-
         s.onerror = () => { cleanup(); reject(new Error("JSONP failed to load")); };
+
         s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
         document.body.appendChild(s);
       });
@@ -325,17 +274,17 @@
 
     function getPayload_(){
       return {
-        saveAs: (saveAsEl.value || "").trim(),
-        clientName: (clientNameEl.value || "").trim(),
-        billingMethod: billingMethodEl.value,
-        currentAmount: Number(currentAmountEl.value || 0),
-        weeksPerMonth: Number(weeksPerMonthEl.value || 0),
-        taxRate: Number(taxRateEl.value || 0),
-        strategy: strategyEl.value,
-        addPerWeek: Number(addPerWeekEl.value || 0),
-        addPerMonth: Number(addPerMonthEl.value || 0),
-        clientTaxShare: Number(clientTaxShareEl.value || 0),
-        targetNetPct: Number(targetNetPctEl.value || 1)
+        saveAs: (el("saveAs").value || "").trim(),
+        clientName: (el("clientName").value || "").trim(),
+        billingMethod: el("billingMethod").value,
+        currentAmount: Number(el("currentAmount").value || 0),
+        weeksPerMonth: Number(el("weeksPerMonth").value || 0),
+        taxRate: Number(el("taxRate").value || 0),
+        strategy: el("strategy").value,
+        addPerWeek: Number(el("addPerWeek").value || 0),
+        addPerMonth: Number(el("addPerMonth").value || 0),
+        clientTaxShare: Number(el("clientTaxShare").value || 0),
+        targetNetPct: Number(el("targetNetPct").value || 1)
       };
     }
 
@@ -344,34 +293,33 @@
       const disp = computed?.display || {};
       if (!inp.strategy) return "";
       if (inp.strategy === "Client pays % of tax (split)"){
-        return `Splitting sales tax — client pays ${disp.clientTaxShare || ""} of the pass-through tax at ${disp.taxRate || ""}.`;
+        return `Splitting sales tax — client pays ${disp.clientTaxShare || ""} of pass-through tax at ${disp.taxRate || ""}.`;
       }
       if (inp.strategy === "Keep client total same (absorb tax)"){
-        return `Keeping client total the same — business absorbs the sales tax at ${disp.taxRate || ""}.`;
+        return `Keeping total the same — business absorbs sales tax at ${disp.taxRate || ""}.`;
       }
       if (inp.strategy === "Add $ per week") return "Adding a fixed increase per week.";
       if (inp.strategy === "Add $ per month") return "Adding a fixed increase per month.";
-      if (inp.strategy === "Target my net revenue % (after tax)"){
-        return `Targeting net revenue at ${disp.targetNetPct || ""} after tax.`;
-      }
+      if (inp.strategy === "Target my net revenue % (after tax)") return `Targeting net revenue at ${disp.targetNetPct || ""} after tax.`;
       return "";
     }
 
     function render_(computed, links){
       const disp = computed.display;
-      outputsCard.style.display = "";
-      explainEl.textContent = explain_(computed);
+      el("outputsCard").style.display = "";
+      el("explain").textContent = explain_(computed);
 
-      o_base.textContent = disp.newBaseTaxable;
-      o_tax.textContent = disp.salesTaxLine;
-      o_total.textContent = disp.newTotal;
-      o_weekly.textContent = disp.weeklyTotal;
+      el("o_base").textContent = disp.newBaseTaxable;
+      el("o_tax").textContent = disp.salesTaxLine;
+      el("o_total").textContent = disp.newTotal;
+      el("o_weekly").textContent = disp.weeklyTotal;
 
-      o_old.textContent = disp.oldBase;
-      o_pass.textContent = disp.passThroughIncrease;
-      o_clientabs.textContent = disp.clientAbsorbs;
-      o_bizabs.textContent = disp.businessAbsorbs;
+      el("o_old").textContent = disp.oldBase;
+      el("o_pass").textContent = disp.passThroughIncrease;
+      el("o_clientabs").textContent = disp.clientAbsorbs;
+      el("o_bizabs").textContent = disp.businessAbsorbs;
 
+      const linksEl = el("links");
       if (links && (links.pdfUrl || links.docUrl)){
         const parts = [];
         if (links.pdfUrl) parts.push(`<a href="${links.pdfUrl}" target="_blank" rel="noopener">Open PDF</a>`);
@@ -383,22 +331,17 @@
     }
 
     async function call_(route, payload){
-      const token = loadAnyToken_();
-      const deviceKey = getDeviceKey_();
       const p64 = b64_(payload);
-
       const url =
         `${LEGACY_API_URL}?route=${encodeURIComponent(route)}` +
-        `&t=${encodeURIComponent(token)}` +
-        `&d=${encodeURIComponent(deviceKey)}` +
         `&payload64=${encodeURIComponent(p64)}`;
-
       return jsonp_(url);
     }
 
-    async function boot_(){
+    function boot_(){
       apiHint.textContent = LEGACY_API_URL;
 
+      // still require Admin Panel sign-in
       const auth = readJson_(AUTH_STORAGE);
       const token = loadAnyToken_();
       if (!auth || !auth.ok || !token){
@@ -410,7 +353,7 @@
       whoEl.textContent = `${auth.employeeId} • ${auth.employeeName || ""}`;
       setStatus("Ready.", "success");
 
-      btnAdjust.onclick = async () => {
+      el("btnAdjust").onclick = async () => {
         try{
           setStatus("Calculating…", "loading");
           const payload = getPayload_();
@@ -426,7 +369,7 @@
         }
       };
 
-      btnExport.onclick = async () => {
+      el("btnExport").onclick = async () => {
         try{
           const payload = getPayload_();
           if (!payload.saveAs){
