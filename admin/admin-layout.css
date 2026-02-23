@@ -1,0 +1,334 @@
+/* ATS Admin Layout v1 — shared system for all admin tools
+   NOTE: Visual-only. Does NOT touch auth/routes/storage logic. */
+
+:root{
+  --ats-purple:#5b2aa8;
+  --ats-purple2:#3f1c83;
+  --ats-blue:#1b2a6d;
+  --ats-yellow:#FFD700;
+
+  --ats-text: rgba(255,255,255,.92);
+  --ats-muted: rgba(255,255,255,.82);
+  --ats-border: rgba(255,255,255,.18);
+  --ats-card: rgba(255,255,255,.10);
+
+  --ats-shadow: 0 12px 30px rgba(0,0,0,.22);
+  --ats-shadow2: 0 18px 44px rgba(0,0,0,.28);
+
+  --ats-r-lg:18px;
+  --ats-r-md:14px;
+  --ats-r-sm:12px;
+
+  --ats-container: 1100px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body.ats-admin{
+  margin:0;
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+  color: var(--ats-text);
+  background:
+    radial-gradient(1200px 600px at 15% 15%, rgba(255,215,0,.18), transparent 60%),
+    radial-gradient(900px 500px at 85% 25%, rgba(123,71,255,.20), transparent 60%),
+    linear-gradient(135deg, #2b0a57 0%, #1a1f4c 40%, #0b1020 100%);
+}
+
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline}
+
+.ats-header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(91,42,168,.55), rgba(27,42,109,.40));
+  border-bottom: 1px solid var(--ats-border);
+}
+.ats-header-inner{
+  max-width: var(--ats-container);
+  margin: 0 auto;
+  padding: 12px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.ats-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+}
+.ats-brand img{
+  height:44px;
+  width:auto;
+  display:block;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+}
+
+.ats-header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.ats-live-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,215,0,.55);
+  background: rgba(255,215,0,.14);
+  color: var(--ats-text);
+  text-decoration:none;
+  font-weight: 650;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+}
+.ats-live-btn:hover{
+  text-decoration:none;
+  background: rgba(255,215,0,.20);
+}
+
+.ats-burger{
+  width:44px;height:44px;
+  border-radius: 999px;
+  border: 1px solid var(--ats-border);
+  background: rgba(255,255,255,.08);
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+}
+.ats-burger span{
+  display:block;
+  width:18px;
+  height:2px;
+  background: rgba(255,255,255,.86);
+  border-radius: 999px;
+}
+
+.ats-main{padding: 18px 0 40px;}
+.ats-container{
+  max-width: var(--ats-container);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Cards + controls */
+.ats-card{
+  border: 1px solid var(--ats-border);
+  background: var(--ats-card);
+  border-radius: var(--ats-r-lg);
+  box-shadow: var(--ats-shadow);
+  padding: 16px;
+}
+.ats-card + .ats-card{margin-top:14px}
+
+.ats-title{
+  font-size: 22px;
+  margin: 0 0 10px;
+  letter-spacing: .2px;
+}
+.ats-subtitle{
+  margin: 0 0 14px;
+  color: var(--ats-muted);
+}
+
+.ats-row{display:flex;gap:12px;flex-wrap:wrap}
+.ats-row > *{flex:1 1 240px}
+
+.ats-input, input[type="text"], input[type="email"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding: 12px 12px;
+  border-radius: var(--ats-r-md);
+  border: 1px solid var(--ats-border);
+  background: rgba(0,0,0,.20);
+  color: var(--ats-text);
+  outline:none;
+}
+textarea{min-height:96px}
+
+.ats-btn, button{
+  border-radius: 999px;
+  border: 1px solid var(--ats-border);
+  background: rgba(255,255,255,.10);
+  color: var(--ats-text);
+  padding: 11px 14px;
+  cursor:pointer;
+  font-weight: 650;
+}
+.ats-btn:hover, button:hover{background: rgba(255,255,255,.14)}
+.ats-btn.primary{
+  border-color: rgba(255,215,0,.70);
+  background: rgba(255,215,0,.18);
+}
+.ats-btn.primary:hover{background: rgba(255,215,0,.24)}
+.ats-btn.danger{
+  border-color: rgba(255,80,80,.55);
+  background: rgba(255,80,80,.12);
+}
+
+/* Drawer nav */
+.ats-nav-backdrop{
+  position:fixed; inset:0;
+  background: rgba(0,0,0,.55);
+  opacity:0; pointer-events:none;
+  transition: opacity .16s ease;
+  z-index:80;
+}
+.ats-nav-drawer{
+  position:fixed;
+  top:0; right:0;
+  height:100%;
+  width:min(360px, 92vw);
+  background: linear-gradient(180deg, rgba(63,28,131,.92), rgba(11,16,32,.96));
+  border-left: 1px solid var(--ats-border);
+  box-shadow: var(--ats-shadow2);
+  transform: translateX(105%);
+  transition: transform .18s ease;
+  z-index:90;
+  display:flex;
+  flex-direction:column;
+}
+.ats-nav-drawer header{
+  padding: 14px 14px 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  border-bottom: 1px solid var(--ats-border);
+}
+.ats-nav-drawer h2{
+  font-size: 16px;
+  margin:0;
+  letter-spacing:.3px;
+}
+.ats-nav-close{
+  width:42px;height:42px;
+  border-radius:999px;
+}
+.ats-nav-list{
+  padding: 10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.ats-nav-item{
+  padding: 12px 12px;
+  border-radius: var(--ats-r-md);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  text-decoration:none;
+}
+.ats-nav-item:hover{text-decoration:none;background: rgba(255,255,255,.10)}
+.ats-nav-item[aria-current="page"]{
+  border-color: rgba(255,215,0,.60);
+  background: rgba(255,215,0,.14);
+}
+.ats-nav-footer{
+  margin-top:auto;
+  padding: 12px 10px 16px;
+  border-top: 1px solid var(--ats-border);
+}
+.ats-nav-footer .ats-live-btn{width:100%;}
+
+/* Mobile tweaks */
+@media (max-width: 520px){
+  .ats-live-btn{display:none;}
+  .ats-brand img{height:40px}
+  .ats-main{padding-top: 14px}
+}
+
+
+/* ===== Clock: Light content card (keeps global admin gradient/nav) ===== */
+.ats-card--light{
+  background:#ffffff;
+  color:#111827;
+  border:1px solid rgba(17,24,39,.10);
+  box-shadow: 0 18px 60px rgba(0,0,0,.28);
+}
+.ats-card--light h1,.ats-card--light h2,.ats-card--light h3,.ats-card--light h4{
+  color:#0f172a;
+}
+.ats-card--light label{ color:#111827; }
+.ats-card--light input,
+.ats-card--light select,
+.ats-card--light textarea{
+  background:#ffffff;
+  color:#111827;
+  border:1px solid rgba(17,24,39,.18);
+}
+.ats-card--light input::placeholder,
+.ats-card--light textarea::placeholder{
+  color: rgba(17,24,39,.55);
+}
+.ats-card--light a{ color:#1b2a6d; }
+
+/* ===== Compatibility layer for legacy tool markup (Estimator/Payroll) ===== */
+.ats-admin .letterhead{display:none !important;}
+.ats-admin .wrap{
+  max-width: var(--ats-container);
+  margin: 0 auto;
+  padding: 18px;
+}
+.ats-admin .top{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+.ats-admin .pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background: rgba(255,255,255,.10);
+  border:1px solid var(--ats-border);
+  color: var(--ats-text);
+}
+.ats-admin .card{
+  background: rgba(255,255,255,.10) !important;
+  border: 1px solid var(--ats-border) !important;
+  border-radius: var(--ats-r-lg) !important;
+  padding: 16px !important;
+  box-shadow: var(--ats-shadow) !important;
+  color: var(--ats-text) !important;
+}
+.ats-admin .card h1,
+.ats-admin .card h2,
+.ats-admin .card h3,
+.ats-admin .card h4{
+  color: var(--ats-text) !important;
+}
+.ats-admin .card label{
+  color: var(--ats-muted) !important;
+}
+.ats-admin .btn{
+  border-radius: 999px !important;
+  border: 1px solid var(--ats-border) !important;
+  background: rgba(255,255,255,.10) !important;
+  color: var(--ats-text) !important;
+  padding: 11px 14px !important;
+  cursor:pointer;
+  font-weight: 650;
+}
+.ats-admin .btn:hover{ background: rgba(255,255,255,.14) !important; }
+.ats-admin .btn.primary{
+  border-color: rgba(255,215,0,.70) !important;
+  background: rgba(255,215,0,.18) !important;
+}
+.ats-admin .btn.primary:hover{ background: rgba(255,215,0,.24) !important; }
+.ats-admin .btn.secondary{
+  background: rgba(255,255,255,.08) !important;
+}
+.ats-admin .btn:disabled{
+  opacity: .65 !important;
+  cursor:not-allowed !important;
+}
